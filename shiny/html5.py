@@ -32,7 +32,7 @@ class Element:
 
     def __str__(self):
         doctype = self.DOCTYPE if self._declarar else None
-        element = etree.tostring(self._element, doctype=doctype)
+        element = etree.tostring(self.element, doctype=doctype)
         if not isinstance(element, str):
             element = element.decode()
         return element
