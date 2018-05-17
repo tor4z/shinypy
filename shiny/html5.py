@@ -2,10 +2,15 @@ from lxml import etree
 
 
 class Element:
-    __slots__ = ["_element"]
+    DOCTYPE = "<!DOCTYPE html>"
+    _SIMPLE_TAG = ["link", "br"]
+    __slots__ = ["_element", "_declarar"]
 
-    def __init__(self, tag):
+    def __init__(self, tag, declarar=False):
+        self._declarar = declarar
         self._element = etree.Element(tag)
+        if tag not in self._SIMPLE_TAG:
+            self._element.text = ""
 
     def set(self, key, value):
         self._element.set(key, value)
@@ -26,20 +31,39 @@ class Element:
             return super().__getattribute__(key)
 
     def append(self, ele):
-        self._element.append(ele)
+        if not isinstance(ele, Element):
+            raise TypeError("Element reqquired.")
+        self._element.append(ele._element)
 
-    @property
-    def text(self):
-        return self._element.text
-
-    @text.setter
     def text(self, text):
         self._element.text = text
 
     def __str__(self):
-        element = etree.tostring(self._element)
+        doctype = self.DOCTYPE if self._declarar else None
+        element = etree.tostring(self._element, doctype=self.DOCTYPE)
         if not isinstance(element, str):
             element = element.decode()
         return element
 
     __repr__ = __str__
+
+
+class CSS(Element):
+    def __init__(self, href):
+        super().__init__("link")
+        self.set("type", "text/css")
+        self.set("rel", "stylesheet")
+        self.set("href", href)
+
+
+class JS(Element):
+    def __init__(self, src):
+        super().__init__("script")
+        self.set("type", "text/javascript")
+        self.set("src", src)
+
+
+class Title(Element):
+    def __init__(self, title):
+        super().__init__("title")
+        self.text(title)
