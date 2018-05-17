@@ -1,13 +1,16 @@
 from shiny.ui import UI
 from shiny.server import Server
 from shiny.app import App
-from shiny.html5 import Element
+from shiny.layout import DashboardLayout
 
 
 ui = UI()
 server = Server()
+dashboard = DashboardLayout("Test")
+ui.layout = dashboard
 
-ui.append(Element("div"))
+dashboard.sidebar.text("sidebar")
+dashboard.main.text("main")
 
 if __name__ == "__main__":
     app = App(ui, server)
