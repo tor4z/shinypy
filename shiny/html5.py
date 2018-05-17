@@ -7,17 +7,32 @@ class Element:
     def __init__(self, tag):
         self._element = etree.Element(tag)
 
-    def __setattribute__(self, key, value):
-        if not key[0] == '_':
-            self._element.set(key, value)
+    def set(self, key, value):
+        self._element.set(key, value)
+
+    def get(self, key):
+        return self._element.get(key)
+
+    def __setattr__(self, key, value):
+        if key not in self.__slots__:
+            self.set(key, value)
+        else:
+            super().__setattr__(key, value)
 
     def __getattr__(self, key):
-        if not key[0] == '_':
-            self._element.get(key)
+        if key not in self.__slots__:
+            return self.get(key)
+        else:
+            return super().__getattribute__(key)
 
     def append(self, ele):
-        pass
+        self._element.append(ele)
 
+    @property
+    def text(self):
+        return self._element.text
+
+    @text.setter
     def text(self, text):
         self._element.text = text
 
