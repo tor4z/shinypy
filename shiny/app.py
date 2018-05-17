@@ -12,7 +12,7 @@ class App:
         self.app.router.add_static(assets[0], assets[1])
 
     async def handle(self, request):
-        name = request.match_info.get('name', "Anonymous")
+        # name = request.match_info.get('name', "Anonymous")
         headers = {"Content-Type": "text/html"}
         return web.Response(text=str(self.ui), headers=headers)
 
