@@ -18,29 +18,21 @@ class Element:
     def get(self, key):
         return self._element.get(key)
 
-    def __setattr__(self, key, value):
-        if key not in self.__slots__:
-            self.set(key, value)
-        else:
-            super().__setattr__(key, value)
-
-    def __getattr__(self, key):
-        if key not in self.__slots__:
-            return self.get(key)
-        else:
-            return super().__getattribute__(key)
+    @property
+    def element(self):
+        return self._element
 
     def append(self, ele):
         if not isinstance(ele, Element):
             raise TypeError("Element reqquired.")
-        self._element.append(ele._element)
+        self._element.append(ele.element)
 
     def text(self, text):
         self._element.text = text
 
     def __str__(self):
         doctype = self.DOCTYPE if self._declarar else None
-        element = etree.tostring(self._element, doctype=self.DOCTYPE)
+        element = etree.tostring(self._element, doctype=doctype)
         if not isinstance(element, str):
             element = element.decode()
         return element

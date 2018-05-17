@@ -15,13 +15,7 @@ def ran_str(k=5, safe=False):
 def test_element():
     h1 = Element("h1")
     text = ran_str(5)
-    id = ran_str(10)
-
-    h1.id = id
-    assert h1.get("id") == id
-    assert h1.id == id
-
-    h1.text = text
+    h1.text(text)
 
     key = ran_str(safe=True)
     value = ran_str()
