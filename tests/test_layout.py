@@ -17,3 +17,4 @@ def test_dashboard():
     assert container.name == "div"
     assert sideabr.name == "nav"
     assert main.name == "main"
+    # TODO test attribute
