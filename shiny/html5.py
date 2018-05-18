@@ -13,7 +13,8 @@ class Element:
             self._element.text = ""
 
     def set(self, key, value):
-        self._element.set(key, value)
+        if not (key is None or value is None):
+            self._element.set(key, value)
 
     def get(self, key):
         return self._element.get(key)
