@@ -69,4 +69,4 @@ class JS(Element):
 class Title(Element):
     def __init__(self, title):
         super().__init__("title")
-        self.text(title)
+        self.text = title

@@ -31,7 +31,7 @@ class DashboardLayout(Layout):
         title_link = Element("a")
         title_link.set("class", "navbar-brand col-sm-3 col-md-2 mr-0")
         title_link.set("href", "/")
-        title_link.text(self._name)
+        title_link.text = self._name
         nav.append(title_link)
         return nav
 
