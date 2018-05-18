@@ -18,6 +18,12 @@ class Element:
     def get(self, key):
         return self._element.get(key)
 
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def __getitem__(self, key):
+        return self.get(key)
+
     @property
     def element(self):
         return self._element
@@ -27,6 +33,11 @@ class Element:
             raise TypeError("Element reqquired.")
         self._element.append(ele.element)
 
+    @property
+    def text(self):
+        return self._element.text
+
+    @text.setter
     def text(self, text):
         self._element.text = text
 
