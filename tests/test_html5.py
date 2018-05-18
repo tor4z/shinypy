@@ -1,24 +1,28 @@
 from shiny.html5 import Element
-import random
-
-
-_ALAPHA = "abcdefghijklmnopqrstuvwxyz"
-_DIGIT = "0123456789"
-_STR = _ALAPHA + _DIGIT
-
-
-def ran_str(k=5, safe=False):
-    return random.choice(_ALAPHA) if safe else "" + \
-           "".join(random.choices(_STR, k=k))
+from shiny.util import randstr
+from bs4 import BeautifulSoup
 
 
 def test_element():
     h1 = Element("h1")
-    text = ran_str(5)
-    h1.text(text)
+    text = randstr(5)
+    h1.text = text
 
-    key = ran_str(safe=True)
-    value = ran_str()
+    key = randstr(5)
+    value = randstr(5)
     h1.set(key, value)
 
-    assert h1.get(key) == value
+    a = Element("a")
+    a.set("href", "/")
+    h1.append(a)
+
+    soup = BeautifulSoup(str(h1), "lxml")
+    tag = soup.h1
+
+    assert tag.name == "h1"
+    assert tag.text == text
+    assert tag[key] == value
+
+    link = tag.a
+    assert link.name == "a"
+    assert link["href"] == "/"
