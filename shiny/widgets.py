@@ -1,5 +1,7 @@
 from .html5 import Element
-from .util import randstr
+import os
+import base64
+import imghdr
 
 
 __all__ = ["Level", "Widget", "Label", "Panel"]
@@ -20,9 +22,9 @@ class Widget(Element):
     _DEFAULT_ID_LEN = 5
 
     def __init__(self, id=None, value=None, *, width=None,
-                 height=None, tag=None):
+                 height=None, tag=None, **kwargs):
         super().__init__(tag or self._TAG)
-        self.id = id or randstr(self._DEFAULT_ID_LEN)
+        self.id = id
         self._class = ""
         self.set("id", self.id)
         self.value = value
@@ -110,7 +112,7 @@ class Input(Widget):
             super().__init__(id, value, **kwargs)
         else:
             self._input_tag = Element(self._TAG)
-            super().__init__(id, value, tag="div", *kwargs)
+            super().__init__(id, value, tag="div", **kwargs)
             self.set("class", "form-group")
             label_tag = self._new_label(id, label)
             self.append(label_tag)
@@ -153,37 +155,43 @@ class Number(Input):
     _TYPE = "number"
 
     def __init__(self, id, name, value=None, *, min=None, max=None,
-                 step=None, label=None, **kwargs):
-        super().__init__(id, name, value, label, **kwargs)
+                 step=1, label=None, **kwargs):
+        super().__init__(id, name, value, label=label, **kwargs)
+        if min is not None and max is not None and max < min:
+            raise ValueError("max should be great than min.")
+        if step is not None and step <= 0:
+            raise ValueError("step should be great than 0")
         self.set("min", min)
         self.set("max", max)
         self.set("step", step)
 
 
 class Password(Input):
-    _TYPE = "reset"
+    _TYPE = "password"
 
 
 class Radio(Widget):
     _TAG = "div"
     _TYPE = "radio"
 
-    def __init__(self, id, name, options, *, label=None, **kwargs):
-        super().__init__(id, None, label, **kwargs)
+    def __init__(self, id, name, options, **kwargs):
         if not isinstance(options, list):
             raise TypeError("List required.")
         self.radios = []
-
         for option in options:
             value, display = option
             radio = Element("input")
             radio.set("type", self._TYPE)
             radio.set("name", name)
+            radio.set("value", value)
             radio_id = id + str(value)
             radio.set("id", radio_id)
             label = Element("label")
             label.set("for", radio_id)
+            label.text = display
             self.radios.append((radio, label))
+
+        super().__init__(None, None, **kwargs)
 
     def set(self, key, value):
         for radio in self.radios:
@@ -209,9 +217,11 @@ class Range(Input):
 
     def __init__(self, id, name, value=None, *, min=None, max=None,
                  label=None, **kwargs):
-        super().__init__(id, name, value, label, **kwargs)
+        super().__init__(id, name, value, label=label, **kwargs)
         self.set("min", min or self._MIN)
         self.set("max", max or self._MAX)
+        if min is not None and max is not None and max < min:
+            raise ValueError("max should be great than min.")
 
 
 class Submit(Widget):
@@ -222,6 +232,10 @@ class Submit(Widget):
     def __init__(self, value=None):
         super().__init__()
         self.set("value", value or self._VALUE)
+        self.set("type", self._TYPE)
+
+    def render(self):
+        pass
 
 
 class Reset(Submit):
@@ -244,16 +258,22 @@ class Url(Input):
 class Textarea(Widget):
     _TAG = "textarea"
 
-    def __init__(self, id, *, rwos=None, cols=None, value=None,
+    def __init__(self, id, name, *, rows=5, cols=5, value=None,
                  label=None, **kwargs):
         if label is None:
-            super().__init__(id, value, **kwargs)
             self._textarea = None
+            super().__init__(id, value, **kwargs)
         else:
-            super().__init__(id, value, tag="div", **kwargs)
             self._textarea = Element(self._TAG)
+            super().__init__(id, value, tag="div", **kwargs)
+            label = Element("label")
+            label.set("for", id)
+            br = Element("br")
+            self.append(label)
+            self.append(br)
 
-        self.set("rwos", rwos)
+        self.set("name", name)
+        self.set("rows", rows)
         self.set("cols", cols)
 
     def set(self, key, value):
@@ -270,9 +290,46 @@ class Textarea(Widget):
 class Form(Widget):
     _TAG = "form"
 
+    def render(self):
+        submit = Submit()
+        reset = Reset()
+        self.append(submit)
+        self.append(reset)
+
 
 class Image(Widget):
-    _TYPE = "image"
+    _TAG = "img"
 
-    def __init__(self):
+    def __init__(self, id=None, *, img=None, path=None, url=None,
+                 alt=None, **kwargs):
+        super().__init__(id, **kwargs)
+        if img is None and path is None and url is None:
+            raise ValueError("not image input.")
+        if url is not None:
+            src = url
+        else:
+            # Use base64 image
+            src = self.base64_src(path, img)
+
+        self.set("src", src)
+        self.set("alt", alt)
+
+    @classmethod
+    def get_img(cls, path, img=None):
+        if img is not None:
+            return img, imghdr.what(None, img)
+        if not os.path.exists(path):
+            raise FileNotFoundError("image not exist.")
+
+        fp = open(path, "rb")
+        img = fp.read()
+        fp.close()
+        return img, imghdr.what(path)
+
+    def base64_src(self, path, img):
+        img, fmt = self.get_img(path, img)
+        base64_img = base64.b64encode(img)
+        return f'data:image/{fmt};base64, {base64_img.decode("utf-8")}'
+
+    def render(self):
         pass
