@@ -1,17 +1,22 @@
 sudo: required
-language: python
 
-python:
-  - "3.6"
-
-env:
-  - TOXENV=travis
-
-install:
-  - pip install tox
-
-script:
-  - tox
-
-notifications:
-  email: false
+matrix:
+  include:
+    - language: python
+      python:
+        - "3.6"
+      env:
+        - TOXENV=travis
+      install:
+        - pip install tox
+      script:
+        - tox
+      notifications:
+        email: false
+    - language: node_js
+      node_js:
+        - "8"
+      install:
+        - npm install --global mocha
+      script:
+        - npm test
