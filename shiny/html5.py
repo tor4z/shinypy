@@ -14,7 +14,7 @@ class Element:
 
     def set(self, key, value):
         if not (key is None or value is None):
-            self._element.set(key, value)
+            self._element.set(key, str(value))
 
     def get(self, key):
         return self._element.get(key)
