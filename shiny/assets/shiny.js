@@ -94,11 +94,11 @@ class EventManager {
 
 
 class Wstream {
-    static WS_PATH = '/ws'
+    static WS_PATH = '/ws';
 
     constructor (wsurl=null) {
         if(!wsurl) {
-            wsurl = this.get_wsurl()
+            wsurl = this.get_wsurl();
         }
         this._ws = WebSocket(wsurl);
         this._ws.onopen = this._on_open;
