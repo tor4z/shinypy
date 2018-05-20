@@ -92,10 +92,9 @@ class EventManager {
     }
 }
 
+const WS_PATH = '/ws';
 
 class Wstream {
-    static WS_PATH = '/ws';
-
     constructor (wsurl=null) {
         if(!wsurl) {
             wsurl = this.get_wsurl();
