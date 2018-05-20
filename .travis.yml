@@ -17,6 +17,7 @@ matrix:
       install:
         - npm install --global mocha
       script:
-        - npm test
+        - cd jstests
+        - mocha test
 notifications:
   email: false
