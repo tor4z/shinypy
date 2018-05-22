@@ -65,6 +65,8 @@ class ModelManager {
                     } else {
                         tag.setAttribute('checked', false);
                     }
+                }else if(input_type == 'img'){
+                    tag.setAttribute('src', value);
                 } else {
                     // value should be a single value.
                     let value = tag.setAttribute('value', value);
