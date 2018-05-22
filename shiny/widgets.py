@@ -46,7 +46,7 @@ class Widget(Element):
             self.set("class", self._class)
 
     def __str__(self):
-        self.render()
+        self._render()
         return super().__str__()
 
     @classmethod
@@ -54,9 +54,14 @@ class Widget(Element):
         level = level or Level.DEFAULT
         return f"{cls._BASE_CLASS}-{level}"
 
-    def render(self):
+    def _render(self):
         raise NotImplementedError
 
+    @classmethod
+    def render(cls, func):
+        def _exec(*args, **kwargs):
+            return func(*args, **kwargs)
+        return _exec
 
 class Label(Widget):
     _TAG = "span"
@@ -66,7 +71,7 @@ class Label(Widget):
         super().__init__(id, value, **kwargs)
         self.add_class(self.level_class(level))
 
-    def render(self):
+    def _render(self):
         if self.value:
             self.text = self.value
 
@@ -98,7 +103,7 @@ class Panel(Widget):
     def append(self, ele):
         self._body.append(ele)
 
-    def render(self):
+    def _render(self):
         super().append(self._body)
 
 
@@ -134,7 +139,7 @@ class Input(Widget):
         else:
             super().set(key, value)
 
-    def render(self):
+    def _render(self):
         if self._input_tag:
             self.append(self._input_tag)
 
@@ -198,7 +203,7 @@ class Radio(Widget):
             rd, _ = radio
             rd.set(key, value)
 
-    def render(self):
+    def _render(self):
         for radio in self.radios:
             rd, lb = radio
             self.append(rd)
@@ -234,7 +239,7 @@ class Submit(Widget):
         self.set("value", value or self._VALUE)
         self.set("type", self._TYPE)
 
-    def render(self):
+    def _render(self):
         pass
 
 
@@ -282,7 +287,7 @@ class Textarea(Widget):
         else:
             self._textarea.set(key, value)
 
-    def render(self):
+    def _render(self):
         if self._textarea is not None:
             self.append(self._textarea)
 
@@ -290,7 +295,7 @@ class Textarea(Widget):
 class Form(Widget):
     _TAG = "form"
 
-    def render(self):
+    def _render(self):
         submit = Submit()
         reset = Reset()
         self.append(submit)
@@ -326,10 +331,18 @@ class Image(Widget):
         fp.close()
         return img, imghdr.what(path)
 
-    def base64_src(self, path, img):
-        img, fmt = self.get_img(path, img)
+    @classmethod
+    def base64_src(cls, path, img):
+        img, fmt = cls.get_img(path, img)
         base64_img = base64.b64encode(img)
         return f'data:image/{fmt};base64, {base64_img.decode("utf-8")}'
 
-    def render(self):
+    def _render(self):
         pass
+
+    @classmethod
+    def render(cls, func):
+        def _exec(*args, **kwargs):
+            img = func(*args, **kwargs)
+            return cls.base64_src(None, img)
+        return _exec
