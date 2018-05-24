@@ -9,7 +9,8 @@ dashboard = DashboardLayout("Test")
 ui.layout = dashboard
 dashboard.sidebar.append(
     wg.Text("test", "test", label="Test"))
-dashboard.main.text = "main"
+dashboard.main.append(
+    wg.Label("test"))
 
 
 def server(OUT):
