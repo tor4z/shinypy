@@ -9,19 +9,30 @@ class App:
         self.ui = ui
         self.server = server
         self.app = web.Application()
-        self.app.add_routes([web.get('/', self.handler),
-                             web.get('/ws', self.ws_handler)])
+        self.app.add_routes([web.get('/', self.handler)])
         self.app.router.add_static(assets[0], assets[1])
 
     async def handler(self, request):
-        headers = {"Content-Type": "text/html"}
-        return web.Response(text=str(self.ui), headers=headers)
+        resp = web.WebSocketResponse()
+        available = resp.can_prepare(request)
+        if not available:
+            headers = {"Content-Type": "text/html"}
+            return web.Response(text=str(self.ui), headers=headers)
 
-    async def ws_handler(self, request):
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
-        wstream = Wstream(ws)
-        exchanger = Exchanger(wstream)
+        await resp.prepare(request)
+        try:
+            async for msg in resp:
+                if msg.type == web.WSMsgType.TEXT:
+                    await resp.send_str(msg.data)
+                else:
+                    return resp
+            return resp
+
+        finally:
+            # disconnected
+            await resp.close()
+
+        
 
     def start(self, port=None, host=None):
         web.run_app(self.app, port=port, host=host)
