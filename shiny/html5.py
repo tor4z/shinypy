@@ -3,7 +3,7 @@ from lxml import etree
 
 class Element:
     DOCTYPE = "<!DOCTYPE html>"
-    _SIMPLE_TAG = ["link", "br"]
+    _SIMPLE_TAG = ["link", "br", "input"]
     __slots__ = ["_element", "_declarar"]
 
     def __init__(self, tag, declarar=False):
@@ -32,6 +32,7 @@ class Element:
     def append(self, ele):
         if not isinstance(ele, Element):
             raise TypeError("Element reqquired.")
+        ele._render()
         self._element.append(ele.element)
 
     @property
@@ -41,6 +42,9 @@ class Element:
     @text.setter
     def text(self, text):
         self._element.text = text
+
+    def _render(self):
+        pass
 
     def __str__(self):
         doctype = self.DOCTYPE if self._declarar else None
