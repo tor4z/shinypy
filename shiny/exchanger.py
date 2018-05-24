@@ -3,7 +3,7 @@ class Exchanger:
         self._wstream = wstream
         self._mapping = {}
         self._tasks = []
-    
+
     def register(self, out_port):
         self._mapping[out_port] = []
 
@@ -36,7 +36,7 @@ class In:
         raise NotImplementedError
 
     async def __getitem__(self, key):
-        self._exchanger.subscribe(self._out_port ,key)
+        self._exchanger.subscribe(self._out_port, key)
         return await self._exchanger.get(key)
 
 

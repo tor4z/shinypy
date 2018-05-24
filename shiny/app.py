@@ -1,7 +1,5 @@
 from aiohttp import web
 from .const import assets
-from .wstream import Wstream
-from .exchanger import Exchanger
 
 
 class App:
@@ -28,12 +26,9 @@ class App:
                 else:
                     return resp
             return resp
-
         finally:
             # disconnected
             await resp.close()
-
-        
 
     def start(self, port=None, host=None):
         web.run_app(self.app, port=port, host=host)

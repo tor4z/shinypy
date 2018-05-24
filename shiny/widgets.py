@@ -18,6 +18,7 @@ class Level:
     WARNING = "warning"
     DANGER = "danger"
 
+
 class Model:
     In = "model-in"
     Out = "model-out"
@@ -30,7 +31,7 @@ class Widget(Element):
     _MODEL = None
     _DEFAULT_ID_LEN = 5
 
-    def __init__(self, id=None, model=None, value=None, *, width=None,
+    def __init__(self, model=None, id=None, value=None, *, width=None,
                  height=None, tag=None, **kwargs):
         super().__init__(tag or self._TAG)
         self.id = id
@@ -80,13 +81,14 @@ class Widget(Element):
             return func(*args, **kwargs)
         return _exec
 
+
 class Label(Widget):
     _TAG = "span"
     _BASE_CLASS = "label"
     _MODEL = Model.Out
 
-    def __init__(self, id=None, value=None, *, level=None, **kwargs):
-        super().__init__(id, value, **kwargs)
+    def __init__(self, model, id=None, value=None, *, level=None, **kwargs):
+        super().__init__(model, id, value, **kwargs)
         self.add_class(self.level_class(level))
 
     def _render(self):
@@ -99,9 +101,9 @@ class Panel(Widget):
     _BASE_CLASS = "panel"
     _MODEL = Model.Layout
 
-    def __init__(self, id=None, *, level=None,
+    def __init__(self, model=None, id=None, *, level=None,
                  header=None, **kwargs):
-        super().__init__(id, None, **kwargs)
+        super().__init__(model, id, None, **kwargs)
         self.add_class(self.level_class(level))
         self._body = None
 
@@ -131,19 +133,18 @@ class Input(Widget):
     _TYPE = "text"
     _MODEL = Model.In
 
-    def __init__(self, id, name, value=None, *, label=None, **kwargs):
+    def __init__(self, model, value, id=None, *, label=None, **kwargs):
         if label is None:
             self._input_tag = None
-            super().__init__(id, value, **kwargs)
+            super().__init__(model, id=None, value=None, **kwargs)
         else:
             self._input_tag = Element(self._TAG)
-            super().__init__(id, value, tag="div", **kwargs)
+            super().__init__(model, id=None, value=None, tag="div", **kwargs)
             self.set("class", "form-group")
             label_tag = self._new_label(id, label)
             self.append(label_tag)
 
         self.set("type", self._TYPE)
-        self.set("name", name)
         self.set("class", "form-control")
         self.set("value", self.value)
 
@@ -179,9 +180,9 @@ class Email(Input):
 class Number(Input):
     _TYPE = "number"
 
-    def __init__(self, id, name, value=None, *, min=None, max=None,
+    def __init__(self, model, value, id=None, *, min=None, max=None,
                  step=1, label=None, **kwargs):
-        super().__init__(id, name, value, label=label, **kwargs)
+        super().__init__(model, id, value, label=label, **kwargs)
         if min is not None and max is not None and max < min:
             raise ValueError("max should be great than min.")
         if step is not None and step <= 0:
@@ -200,7 +201,7 @@ class Radio(Widget):
     _TYPE = "radio"
     _MODEL = Model.In
 
-    def __init__(self, id, name, options, **kwargs):
+    def __init__(self, model, options, id=None, **kwargs):
         if not isinstance(options, list):
             raise TypeError("List required.")
         self.radios = []
@@ -208,7 +209,6 @@ class Radio(Widget):
             value, display = option
             radio = Element("input")
             radio.set("type", self._TYPE)
-            radio.set("name", name)
             radio.set("value", value)
             radio_id = id + str(value)
             radio.set("id", radio_id)
@@ -217,7 +217,7 @@ class Radio(Widget):
             label.text = display
             self.radios.append((radio, label))
 
-        super().__init__(None, None, **kwargs)
+        super().__init__(model, None, **kwargs)
 
     def set(self, key, value):
         for radio in self.radios:
@@ -241,9 +241,9 @@ class Range(Input):
     _MIN = 0
     _MAX = 10
 
-    def __init__(self, id, name, value=None, *, min=None, max=None,
+    def __init__(self, model, value, id=None, *, min=None, max=None,
                  label=None, **kwargs):
-        super().__init__(id, name, value, label=label, **kwargs)
+        super().__init__(model, id, value, label=label, **kwargs)
         self.set("min", min or self._MIN)
         self.set("max", max or self._MAX)
         if min is not None and max is not None and max < min:
@@ -286,21 +286,20 @@ class Textarea(Widget):
     _TAG = "textarea"
     _MODEL = Model.In
 
-    def __init__(self, id, name, *, rows=5, cols=5, value=None,
+    def __init__(self, model, id=None, *, rows=5, cols=5, value=None,
                  label=None, **kwargs):
         if label is None:
             self._textarea = None
-            super().__init__(id, value, **kwargs)
+            super().__init__(model, id, value, **kwargs)
         else:
             self._textarea = Element(self._TAG)
-            super().__init__(id, value, tag="div", **kwargs)
+            super().__init__(model, id, value, tag="div", **kwargs)
             label = Element("label")
             label.set("for", id)
             br = Element("br")
             self.append(label)
             self.append(br)
 
-        self.set("name", name)
         self.set("rows", rows)
         self.set("cols", cols)
 
@@ -330,9 +329,9 @@ class Image(Widget):
     _TAG = "img"
     _MODEL = Model.Out
 
-    def __init__(self, id=None, *, img=None, path=None, url=None,
+    def __init__(self, model, id=None, *, img=None, path=None, url=None,
                  alt=None, **kwargs):
-        super().__init__(id, **kwargs)
+        super().__init__(model, id, **kwargs)
         if img is None and path is None and url is None:
             raise ValueError("not image input.")
         if url is not None:
