@@ -4,7 +4,10 @@ import base64
 import imghdr
 
 
-__all__ = ["Level", "Widget", "Label", "Panel"]
+__all__ = ["Level", "Model", "Widget", "Label", "Panel", "Date", "File",
+           "Email", "Number", "Password", "Radio", "Checkbox", "Range",
+           "Submit", "Reset", "Text", "Time", "Url", "Textarea", "Form",
+           "Image", "WidgetExp"]
 
 
 class Level:
@@ -15,13 +18,19 @@ class Level:
     WARNING = "warning"
     DANGER = "danger"
 
+class Model:
+    In = "model-in"
+    Out = "model-out"
+    Layout = "model-layout"
+
 
 class Widget(Element):
     _TAG = "div"
     _BASE_CLASS = ""
+    _MODEL = None
     _DEFAULT_ID_LEN = 5
 
-    def __init__(self, id=None, value=None, *, width=None,
+    def __init__(self, id=None, model=None, value=None, *, width=None,
                  height=None, tag=None, **kwargs):
         super().__init__(tag or self._TAG)
         self.id = id
@@ -31,6 +40,14 @@ class Widget(Element):
         self.width(width)
         self.height(height)
         self.add_class(self._BASE_CLASS)
+        self.set_model(model or id)
+
+    def set_model(self, model):
+        if self._MODEL is None:
+            raise WidgetExp("MODEL undefined.")
+        if not isinstance(model, str):
+            raise TypeError("model should be a string.")
+        self.set(self._MODEL, model)
 
     def width(self, val):
         if val is not None:
@@ -66,6 +83,7 @@ class Widget(Element):
 class Label(Widget):
     _TAG = "span"
     _BASE_CLASS = "label"
+    _MODEL = Model.Out
 
     def __init__(self, id=None, value=None, *, level=None, **kwargs):
         super().__init__(id, value, **kwargs)
@@ -79,6 +97,7 @@ class Label(Widget):
 class Panel(Widget):
     _TAG = "div"
     _BASE_CLASS = "panel"
+    _MODEL = Model.Layout
 
     def __init__(self, id=None, *, level=None,
                  header=None, **kwargs):
@@ -110,6 +129,7 @@ class Panel(Widget):
 class Input(Widget):
     _TAG = "input"
     _TYPE = "text"
+    _MODEL = Model.In
 
     def __init__(self, id, name, value=None, *, label=None, **kwargs):
         if label is None:
@@ -178,6 +198,7 @@ class Password(Input):
 class Radio(Widget):
     _TAG = "div"
     _TYPE = "radio"
+    _MODEL = Model.In
 
     def __init__(self, id, name, options, **kwargs):
         if not isinstance(options, list):
@@ -233,6 +254,7 @@ class Submit(Widget):
     _TAG = "input"
     _TYPE = "submit"
     _VALUE = "Submit"
+    _MODEL = Model.Out
 
     def __init__(self, value=None):
         super().__init__()
@@ -262,6 +284,7 @@ class Url(Input):
 
 class Textarea(Widget):
     _TAG = "textarea"
+    _MODEL = Model.In
 
     def __init__(self, id, name, *, rows=5, cols=5, value=None,
                  label=None, **kwargs):
@@ -294,6 +317,7 @@ class Textarea(Widget):
 
 class Form(Widget):
     _TAG = "form"
+    _MODEL = Model.Layout
 
     def _render(self):
         submit = Submit()
@@ -304,6 +328,7 @@ class Form(Widget):
 
 class Image(Widget):
     _TAG = "img"
+    _MODEL = Model.Out
 
     def __init__(self, id=None, *, img=None, path=None, url=None,
                  alt=None, **kwargs):
@@ -346,3 +371,7 @@ class Image(Widget):
             img = func(*args, **kwargs)
             return cls.base64_src(None, img)
         return _exec
+
+
+class WidgetExp(Exception):
+    pass
