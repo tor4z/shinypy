@@ -7,8 +7,9 @@ from shiny import widgets as wg
 ui = UI()
 dashboard = DashboardLayout("Test")
 ui.layout = dashboard
-dashboard.sidebar.text("sidebar")
-dashboard.main.text("main")
+dashboard.sidebar.append(
+    wg.Text("test", "test", label="Test"))
+dashboard.main.text = "main"
 
 
 def server(OUT):
