@@ -2,7 +2,8 @@ from .html5 import Element, CSS, JS, Title
 from .layout import Layout
 from .const import (bootstrap_css_path,
                     bootstrap_js_path,
-                    jquery_js_path)
+                    jquery_js_path,
+                    shiny_js_path)
 
 
 class UI:
@@ -24,11 +25,13 @@ class UI:
         bootstrap_css = CSS(bootstrap_css_path)
         bootstrap_js = JS(bootstrap_js_path)
         jquery_js = JS(jquery_js_path)
+        shiny_js = JS(shiny_js_path)
 
         head.append(title)
         head.append(bootstrap_css)
-        head.append(bootstrap_js)
         head.append(jquery_js)
+        head.append(bootstrap_js)
+        head.append(shiny_js)
 
         self.html.append(head)
 
