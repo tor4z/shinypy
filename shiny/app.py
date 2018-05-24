@@ -23,6 +23,7 @@ class App:
         try:
             async for msg in resp:
                 if msg.type == web.WSMsgType.TEXT:
+                    print(msg.data)
                     await resp.send_str(msg.data)
                 else:
                     return resp
