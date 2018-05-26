@@ -11,13 +11,5 @@ matrix:
         - pip install tox
       script:
         - tox
-    - language: node_js
-      node_js:
-        - "8"
-      install:
-        - npm install --global mocha
-      script:
-        - cd jstests
-        - mocha test
 notifications:
   email: false
