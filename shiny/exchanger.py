@@ -3,23 +3,31 @@ from .wstream import string_to_json, json_to_string
 
 class Mapping:
     def __init__(self):
-        # TODO double end binding
-        self._inited = []
-        self._mapping = {}
+        self._inited = False
+        self._in_map = {}
+        self._out_map = {}
 
-    def set(self, in_port, out_port):
-        if out_port in self._inited:
-            return
-        else:
-            self._inited.append(out_port)
+    def inited(self):
+        if not self._inited:
+            self._inited = True
 
-        if in_port in self._mapping:
-            self._mapping[in_port].add(out_port)
+    def bind(self, in_port, out_port):
+        # Double end binding
+        if not self._inited:
+            self._bind(self._in_map, in_port, out_port)
+            self._bind(self._out_map, out_port, in_port)
+
+    def _bind(self, map, key1, key2):
+        if key1 in map:
+            map[key1].add(key2)
         else:
-            self._mapping[in_port] = {out_port}
+            map[key1] = {key2}
 
     def get_outs(self, in_port):
-        return self._mapping[in_port]
+        return self._in_map[in_port]
+
+    def get_ins(self, out_port):
+        return self._out_map[out_port]
 
 
 class In:
@@ -33,7 +41,7 @@ class In:
         raise NotImplementedError
 
     def __getitem__(self, in_port):
-        self.mapping.set(in_port, self._out_port)
+        self.mapping.bind(in_port, self._out_port)
         if in_port in self._data:
             return self._data[in_port]
         else:
