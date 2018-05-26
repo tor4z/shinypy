@@ -1,4 +1,5 @@
 from shiny import widgets as wg
+from shiny.widgets import Model
 from shiny.util import randstr
 from bs4 import BeautifulSoup
 import random
@@ -17,7 +18,8 @@ def new_soup(element):
 def test_lable():
     id = randstr(5)
     val = randstr(5)
-    label = wg.Label(id, val)
+    model = randstr(5)
+    label = wg.Label(model, id, val)
     soup = new_soup(label)
     tag = soup.span
 
@@ -28,7 +30,8 @@ def test_lable():
 
 def test_panel():
     id = randstr(5)
-    panel = wg.Panel(id, header="Header")
+    model = randstr()
+    panel = wg.Panel(model, id, header="Header")
     soup = new_soup(panel)
 
     panel_tag = soup.div
@@ -45,25 +48,23 @@ def test_panel():
 
 
 def test_date():
-    id = randstr(5)
-    name = randstr(5)
-    date = wg.Date(id, name=name)
+    model = randstr(5)
+
+    date = wg.Date(model)
     soup = new_soup(date)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
-    assert input_tag["id"] == id
-    assert input_tag["name"] == name
     assert input_tag["type"] == "date"
 
 
 def test_date_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
 
-    date = wg.Date(id, name=name, label=lab)
+    date = wg.Date(model, None, id=id, label=lab)
     soup = new_soup(date)
 
     container = soup.div
@@ -74,30 +75,30 @@ def test_date_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "date"
 
 
 def test_file():
     id = randstr(5)
-    name = randstr(5)
-    file = wg.File(id, name=name)
+    model = randstr(5)
+    file = wg.File(model, "path", id=id)
     soup = new_soup(file)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "file"
 
 
 def test_file_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
 
-    file = wg.File(id, name=name, label=lab)
+    file = wg.File(model, "file/path", id=id, label=lab)
     soup = new_soup(file)
 
     container = soup.div
@@ -108,30 +109,31 @@ def test_file_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "file"
 
 
 def test_email():
     id = randstr(5)
-    name = randstr(5)
-    email = wg.Email(id, name=name)
+    model = randstr(5)
+
+    email = wg.Email(model, "emai_addr", id=id)
     soup = new_soup(email)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "email"
 
 
 def test_email_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
 
-    email = wg.Email(id, name=name, label=lab)
+    email = wg.Email(model, "email_addr", id=id, label=lab)
     soup = new_soup(email)
 
     container = soup.div
@@ -142,24 +144,25 @@ def test_email_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "email"
 
 
 def test_number():
     id = randstr(5)
-    name = randstr(5)
+    model = randstr(5)
     min = random.randint(0, 10)
-    max = random.randint(11, 100)
+    max = random.randint(100, 200)
     step = random.randint(1, 10)
-    number = wg.Number(id, name, min=min, max=max, step=step)
+    number = wg.Number(model, random.randint(11, 99), id=id, min=min, max=max,
+                       step=step)
     soup = new_soup(number)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "number"
     assert input_tag["min"] == str(min)
     assert input_tag["max"] == str(max)
@@ -169,12 +172,13 @@ def test_number():
 def test_number_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
     min = random.randint(0, 10)
-    max = random.randint(11, 100)
+    max = random.randint(100, 200)
     step = random.randint(1, 10)
 
-    number = wg.Number(id, name, min=min, max=max, step=step, label=lab)
+    number = wg.Number(model, random.randint(11, 99), id=id, min=min, max=max,
+                       step=step, label=lab)
     soup = new_soup(number)
 
     container = soup.div
@@ -185,7 +189,7 @@ def test_number_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "number"
     assert input_tag["min"] == str(min)
     assert input_tag["max"] == str(max)
@@ -195,39 +199,53 @@ def test_number_label():
 def test_number_valueerror():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
+    value = random.randint(100, 200)
 
     with pytest.raises(ValueError):
-        wg.Number(id, name, min=random.randint(100, 200),
+        wg.Number(model, value, id=id, min=random.randint(100, 200),
                   max=random.randint(0, 99), label=lab)
 
     with pytest.raises(ValueError):
-        wg.Number(id, name, min=random.randint(0, 99),
+        wg.Number(model, value, id=id, min=random.randint(0, 99),
                   max=random.randint(100, 200),
                   step=random.randint(-100, -1),
                   label=lab)
 
+    value = random.randint(0, 99)
+    with pytest.raises(ValueError):
+        wg.Number(model, value, id=id, min=random.randint(100, 200),
+                  max=random.randint(300, 400), label=lab)
+
+    value = random.randint(401, 500)
+    with pytest.raises(ValueError):
+        wg.Number(model, value, id=id, min=random.randint(100, 200),
+                  max=random.randint(300, 400), label=lab)
+
 
 def test_password():
     id = randstr(5)
-    name = randstr(5)
-    passwd = wg.Password(id, name=name)
+    model = randstr(5)
+    pwd = randstr(10)
+
+    passwd = wg.Password(model, pwd, id=id)
     soup = new_soup(passwd)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "password"
 
 
 def test_password_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
+    pwd = randstr(10)
 
-    passwd = wg.Password(id, name=name, label=lab)
+    passwd = wg.Password(model, pwd, id=id, label=lab)
     soup = new_soup(passwd)
 
     container = soup.div
@@ -238,26 +256,26 @@ def test_password_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "password"
 
 
 def test_radio():
     id = randstr(5)
-    name = randstr(5)
+    model = randstr(5)
     options = []
     for i in range(10):
         val = randstr(i * 2)
         options.append((val, val.upper()))
 
-    radio = wg.Radio(id, name, options)
+    radio = wg.Radio(model, options, id=id)
     soup = new_soup(radio)
 
     for input_tag in soup.find_all("input"):
         value = input_tag["value"]
         assert input_tag.name == "input"
         assert input_tag["id"] == id + str(value)
-        assert input_tag["name"] == name
+        assert input_tag[Model.In] == model
         assert input_tag["type"] == "radio"
 
         label = input_tag.find_next_sibling("label")
@@ -271,20 +289,20 @@ def test_radio():
 
 def test_checkbox():
     id = randstr(5)
-    name = randstr(5)
+    model = randstr(5)
     options = []
     for i in range(10):
         val = randstr(i * 2)
         options.append((val, val.upper()))
 
-    checkbox = wg.Checkbox(id, name, options)
+    checkbox = wg.Checkbox(model, options, id=id)
     soup = new_soup(checkbox)
 
     for input_tag in soup.find_all("input"):
         value = input_tag["value"]
         assert input_tag.name == "input"
         assert input_tag["id"] == id + str(value)
-        assert input_tag["name"] == name
+        assert input_tag[Model.In] == model
         assert input_tag["type"] == "checkbox"
 
         label = input_tag.find_next_sibling("label")
@@ -298,17 +316,17 @@ def test_checkbox():
 
 def test_range():
     id = randstr(5)
-    name = randstr(5)
+    model = randstr(5)
     min = random.randint(0, 10)
-    max = random.randint(11, 100)
-    range = wg.Range(id, name, min=min, max=max)
+    max = random.randint(100, 200)
+    range = wg.Range(model, random.randint(11, 99), min=min, max=max, id=id)
     soup = new_soup(range)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "range"
     assert input_tag["min"] == str(min)
     assert input_tag["max"] == str(max)
@@ -317,11 +335,12 @@ def test_range():
 def test_range_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
     min = random.randint(0, 10)
-    max = random.randint(11, 100)
+    max = random.randint(110, 200)
+    value = random.randint(11, 100)
 
-    range = wg.Range(id, name, min=min, max=max, label=lab)
+    range = wg.Range(model, value, id=id, min=min, max=max, label=lab)
     soup = new_soup(range)
 
     container = soup.div
@@ -332,7 +351,7 @@ def test_range_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "range"
     assert input_tag["min"] == str(min)
     assert input_tag["max"] == str(max)
@@ -341,16 +360,29 @@ def test_range_label():
 def test_range_valueerror():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
+    value = random.randint(100, 200)
 
     with pytest.raises(ValueError):
-        wg.Range(id, name, min=random.randint(100, 200),
+        wg.Range(model, value, id=id, min=random.randint(100, 200),
                  max=random.randint(0, 99), label=lab)
+
+    value = random.randint(0, 99)
+    with pytest.raises(ValueError):
+        wg.Range(model, value, id=id, min=random.randint(100, 200),
+                 max=random.randint(300, 400), label=lab)
+
+    value = random.randint(401, 500)
+    with pytest.raises(ValueError):
+        wg.Range(model, value, id=id, min=random.randint(100, 200),
+                 max=random.randint(300, 400), label=lab)
 
 
 def test_submit():
     value = randstr(5)
-    submit = wg.Submit(value)
+    model = randstr(5)
+
+    submit = wg.Submit(model, value)
     soup = new_soup(submit)
 
     input_tag = soup.input
@@ -358,11 +390,13 @@ def test_submit():
     assert input_tag.name == "input"
     assert input_tag["type"] == "submit"
     assert input_tag["value"] == value
+    assert input_tag[Model.Button] == model
 
 
 def test_reset():
     value = randstr(5)
-    reset = wg.Reset(value)
+    model = randstr(5)
+    reset = wg.Reset(model, value)
     soup = new_soup(reset)
 
     input_tag = soup.input
@@ -370,28 +404,32 @@ def test_reset():
     assert input_tag.name == "input"
     assert input_tag["type"] == "reset"
     assert input_tag["value"] == value
+    assert input_tag[Model.Button] == model
 
 
 def test_text():
     id = randstr(5)
-    name = randstr(5)
-    text = wg.Text(id, name=name)
+    model = randstr(5)
+    txt = randstr(100)
+
+    text = wg.Text(model, txt, id=id)
     soup = new_soup(text)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "text"
 
 
 def test_text_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
+    value = randstr(10)
 
-    text = wg.Text(id, name=name, label=lab)
+    text = wg.Text(model, value, id=id, label=lab)
     soup = new_soup(text)
 
     container = soup.div
@@ -402,30 +440,30 @@ def test_text_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "text"
 
 
 def test_time():
     id = randstr(5)
-    name = randstr(5)
-    time = wg.Time(id, name=name)
+    model = randstr(5)
+    time = wg.Time(model, id=id)
     soup = new_soup(time)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "time"
 
 
 def test_time_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
 
-    time = wg.Time(id, name=name, label=lab)
+    time = wg.Time(model, id=id, label=lab)
     soup = new_soup(time)
 
     container = soup.div
@@ -436,30 +474,32 @@ def test_time_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "time"
 
 
 def test_url():
     id = randstr(5)
-    name = randstr(5)
-    url = wg.Url(id, name=name)
+    model = randstr(5)
+    value = randstr(10)
+    url = wg.Url(model, value, id=id)
     soup = new_soup(url)
 
     input_tag = soup.input
 
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "url"
 
 
 def test_url_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
+    value = randstr(10)
 
-    url = wg.Url(id, name=name, label=lab)
+    url = wg.Url(model, value, id=id, label=lab)
     soup = new_soup(url)
 
     container = soup.div
@@ -470,14 +510,15 @@ def test_url_label():
     assert label_tag["for"] == id
     assert input_tag.name == "input"
     assert input_tag["id"] == id
-    assert input_tag["name"] == name
+    assert input_tag[Model.In] == model
     assert input_tag["type"] == "url"
 
 
 def test_textarea():
     id = randstr(5)
-    name = randstr(5)
-    textarea = wg.Textarea(id, name, rows=random.randint(1, 100),
+    model = randstr(5)
+    value = randstr(100)
+    textarea = wg.Textarea(model, value, id=id, rows=random.randint(1, 100),
                            cols=random.randint(1, 100))
     soup = new_soup(textarea)
 
@@ -486,15 +527,16 @@ def test_textarea():
     assert textarea_tag is not None
     assert textarea_tag.name == "textarea"
     assert textarea_tag["id"] == id
-    assert textarea_tag["name"] == name
+    assert textarea_tag[Model.In] == model
 
 
 def test_textarea_label():
     id = randstr(5)
     lab = randstr(10)
-    name = randstr(5)
+    model = randstr(5)
+    value = randstr(100)
 
-    textarea = wg.Textarea(id, name, rows=random.randint(1, 100),
+    textarea = wg.Textarea(model, value, id=id, rows=random.randint(1, 100),
                            cols=random.randint(1, 100),
                            label=lab)
     soup = new_soup(textarea)
@@ -508,12 +550,14 @@ def test_textarea_label():
     assert textarea_tag is not None
     assert textarea_tag.name == "textarea"
     assert textarea_tag["id"] == id
-    assert textarea_tag["name"] == name
+    assert textarea_tag[Model.In] == model
 
 
 def test_form():
     id = randstr(5)
-    form = wg.Form(id)
+    model = randstr(5)
+
+    form = wg.Form(model, id=id)
     soup = new_soup(form)
 
     form_tag = soup.form
@@ -521,11 +565,14 @@ def test_form():
     assert form_tag is not None
     assert form_tag.name == "form"
     assert form_tag["id"] == id
+    assert form_tag[Model.Layout] == model
 
 
 def test_form_with_widgets():
     id = randstr(5)
-    form = wg.Form(id)
+    model = randstr(5)
+
+    form = wg.Form(model, id=id)
     form.append(wg.Text(randstr(5), randstr(5)))
     form.append(wg.Url(randstr(5), randstr(5)))
     form.append(wg.Email(randstr(5), randstr(5)))
@@ -568,12 +615,13 @@ def test_form_with_widgets():
 
 def test_image_exp():
     id = randstr(5)
+    model = randstr(5)
 
     with pytest.raises(ValueError):
-        wg.Image(id)
+        wg.Image(model, id)
 
     with pytest.raises(FileNotFoundError):
-        wg.Image(id, path=randstr(10))
+        wg.Image(model, id, path=randstr(10))
 
 
 def test_read_image():
@@ -586,7 +634,8 @@ def test_read_image():
 def test_image():
     id = randstr(5)
     alt = randstr(5)
-    image = wg.Image(id, path=TEST_IMAGE_PATH, alt=alt)
+    model = randstr(5)
+    image = wg.Image(model, id, path=TEST_IMAGE_PATH, alt=alt)
 
     soup = new_soup(image)
     img_tag = soup.img
@@ -599,5 +648,6 @@ def test_image():
     assert img_tag is not None
     assert img_tag.name == "img"
     assert img_tag["id"] == id
+    assert img_tag[Model.Out] == model
     assert img_tag["alt"] == alt
     assert img_tag["src"] == f'data:image/{TEST_IMAGE_FMT};base64, {b64_img}'

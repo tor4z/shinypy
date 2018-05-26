@@ -1,7 +1,9 @@
-from .html5 import Element
 import os
 import base64
 import imghdr
+import datetime
+from .html5 import Element
+from .util import randstr
 
 
 __all__ = ["Level", "Model", "Widget", "Label", "Panel", "Date", "File",
@@ -23,6 +25,7 @@ class Model:
     In = "model-in"
     Out = "model-out"
     Layout = "model-layout"
+    Button = "model-button"
 
 
 class Widget(Element):
@@ -31,17 +34,15 @@ class Widget(Element):
     _MODEL = None
     _DEFAULT_ID_LEN = 5
 
-    def __init__(self, model=None, id=None, value=None, *, width=None,
-                 height=None, tag=None, **kwargs):
+    def __init__(self, model, value=None, *, id=None, tag=None, **kwargs):
         super().__init__(tag or self._TAG)
         self.id = id
+        self.model = model
         self._class = ""
         self.set("id", self.id)
         self.value = value
-        self.width(width)
-        self.height(height)
         self.add_class(self._BASE_CLASS)
-        self.set_model(model or id)
+        self.set_model(model or self.id or randstr(5))
 
     def set_model(self, model):
         if self._MODEL is None:
@@ -88,7 +89,7 @@ class Label(Widget):
     _MODEL = Model.Out
 
     def __init__(self, model, id=None, value=None, *, level=None, **kwargs):
-        super().__init__(model, id, value, **kwargs)
+        super().__init__(model, value, id=id, **kwargs)
         self.add_class(self.level_class(level))
 
     def _render(self):
@@ -103,7 +104,7 @@ class Panel(Widget):
 
     def __init__(self, model=None, id=None, *, level=None,
                  header=None, **kwargs):
-        super().__init__(model, id, None, **kwargs)
+        super().__init__(model, None, id=id, **kwargs)
         self.add_class(self.level_class(level))
         self._body = None
 
@@ -133,13 +134,14 @@ class Input(Widget):
     _TYPE = "text"
     _MODEL = Model.In
 
-    def __init__(self, model, value, id=None, *, label=None, **kwargs):
+    def __init__(self, model, value, *, id=None, label=None, **kwargs):
         if label is None:
             self._input_tag = None
-            super().__init__(model, id=None, value=None, **kwargs)
+            super().__init__(model, None, id=id, **kwargs)
         else:
+            id = id or randstr(5)   # id must be not None
             self._input_tag = Element(self._TAG)
-            super().__init__(model, id=None, value=None, tag="div", **kwargs)
+            super().__init__(model, None, id=id, tag="div", **kwargs)
             self.set("class", "form-group")
             label_tag = self._new_label(id, label)
             self.append(label_tag)
@@ -168,12 +170,20 @@ class Input(Widget):
 class Date(Input):
     _TYPE = "date"
 
+    def __init__(self, model, value=None, **kwargs):
+        if value is not None and not isinstance(value, datetime.date):
+            raise TypeError("datetime.date required.")
+        date = value or datetime.date.today()
+        date_str = date.strftime("%Y-%m-%d")
+        super().__init__(model, date_str, **kwargs)
+
 
 class File(Input):
     _TYPE = "file"
 
 
 class Email(Input):
+    # TODO verify email addr
     _TYPE = "email"
 
 
@@ -182,11 +192,16 @@ class Number(Input):
 
     def __init__(self, model, value, id=None, *, min=None, max=None,
                  step=1, label=None, **kwargs):
-        super().__init__(model, id, value, label=label, **kwargs)
+        super().__init__(model, value, id=id, label=label, **kwargs)
         if min is not None and max is not None and max < min:
-            raise ValueError("max should be great than min.")
+            raise ValueError("max should be greater than min.")
         if step is not None and step <= 0:
-            raise ValueError("step should be great than 0")
+            raise ValueError("step should be greater than 0")
+        if (min is not None and value < min) or\
+           (max is not None and value > max):
+            raise ValueError("value should be less than max and\
+                             greater then min")
+
         self.set("min", min)
         self.set("max", max)
         self.set("step", step)
@@ -239,13 +254,19 @@ class Checkbox(Radio):
 class Range(Input):
     _TYPE = "range"
     _MIN = 0
-    _MAX = 10
+    _MAX = 100
 
     def __init__(self, model, value, id=None, *, min=None, max=None,
                  label=None, **kwargs):
-        super().__init__(model, id, value, label=label, **kwargs)
-        self.set("min", min or self._MIN)
-        self.set("max", max or self._MAX)
+        super().__init__(model, value, id=id, label=label, **kwargs)
+        min = min or self._MIN
+        max = max or self._MAX
+        if (value < min) or (value > max):
+            raise ValueError("value should be less than max and\
+                             greater then min")
+
+        self.set("min", min)
+        self.set("max", max)
         if min is not None and max is not None and max < min:
             raise ValueError("max should be great than min.")
 
@@ -254,10 +275,10 @@ class Submit(Widget):
     _TAG = "input"
     _TYPE = "submit"
     _VALUE = "Submit"
-    _MODEL = Model.Out
+    _MODEL = Model.Button
 
-    def __init__(self, value=None):
-        super().__init__()
+    def __init__(self, model, value=None):
+        super().__init__(model)
         self.set("value", value or self._VALUE)
         self.set("type", self._TYPE)
 
@@ -277,6 +298,15 @@ class Text(Input):
 class Time(Input):
     _TYPE = "time"
 
+    def __init__(self, model, value=None, **kwargs):
+        if value is None:
+            value = datetime.datetime.now()
+        if value is not None and isinstance(value, datetime.datetime):
+            value = value.strftime("%H:%M")
+        else:
+            raise TypeError("datetime required.")
+        super().__init__(model, value, **kwargs)
+
 
 class Url(Input):
     _TYPE = "url"
@@ -286,14 +316,14 @@ class Textarea(Widget):
     _TAG = "textarea"
     _MODEL = Model.In
 
-    def __init__(self, model, id=None, *, rows=5, cols=5, value=None,
+    def __init__(self, model, value, *, id=None, rows=5, cols=5,
                  label=None, **kwargs):
         if label is None:
             self._textarea = None
-            super().__init__(model, id, value, **kwargs)
+            super().__init__(model, value, id=id, **kwargs)
         else:
             self._textarea = Element(self._TAG)
-            super().__init__(model, id, value, tag="div", **kwargs)
+            super().__init__(model, value, id=id, tag="div", **kwargs)
             label = Element("label")
             label.set("for", id)
             br = Element("br")
@@ -319,8 +349,8 @@ class Form(Widget):
     _MODEL = Model.Layout
 
     def _render(self):
-        submit = Submit()
-        reset = Reset()
+        submit = Submit(self.model)
+        reset = Reset(self.model)
         self.append(submit)
         self.append(reset)
 
@@ -331,7 +361,7 @@ class Image(Widget):
 
     def __init__(self, model, id=None, *, img=None, path=None, url=None,
                  alt=None, **kwargs):
-        super().__init__(model, id, **kwargs)
+        super().__init__(model, None, id=id, **kwargs)
         if img is None and path is None and url is None:
             raise ValueError("not image input.")
         if url is not None:
