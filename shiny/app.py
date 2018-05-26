@@ -24,6 +24,7 @@ class App:
             async for msg in resp:
                 if msg.type == web.WSMsgType.TEXT:
                     out = Out(In(msg.data, self.mapping))
+                    self.mapping.inited()
                     self.server(out)
                     await resp.send_str(str(out))
                 else:
