@@ -5,6 +5,11 @@ client       server      client
 'use strict'; 
 
 
+const Status = {
+    
+}
+
+
 function log(msg) {
     console.log('Shiny Log: ' + msg);
 }
@@ -314,6 +319,54 @@ class Wstream extends WebSocket{
             super.send(str);
         }
     }
+}
+
+
+/*
+All message should be a json string.
+Get:
+    query msg:
+    {
+        method: 'GET',
+        data: {
+            keys: ['key1', 'key2', 'key3', ...]
+        }
+    }
+    responses msg:
+    {
+        status: status_code,
+        reason: 'Error message',
+        data: {
+            key: value (single value or array of value)
+        }
+    }
+
+Set:
+    set msg
+    {
+        method: 'SET',
+        data: {}
+    }
+    responses msg:
+    {
+        status: status_code,
+        reason: 'Error message'
+    }
+
+Execute:
+    {
+        method: 'EXEC',
+        data: {}
+    }
+
+    {
+        status: status_code,
+        reason: 'Error message',
+        data: {}
+    }
+*/
+class MessageParser {
+
 }
 
 
