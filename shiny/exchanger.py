@@ -74,7 +74,7 @@ class Out:
 
     def __getitem__(self, key):
         raise NotImplementedError
-    
+
     async def init_execute(self):
         await self._execute(self._outs.keys())
 
