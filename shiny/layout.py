@@ -3,12 +3,12 @@ from .const import dashboard_css_path
 
 
 class Layout(Element):
-    def render(self):
+    def _render(self):
         raise NotImplementedError
 
     @property
     def element(self):
-        self.render()
+        self._render()
         return self._element
 
 
@@ -65,7 +65,7 @@ class DashboardLayout(Layout):
         container.append(row_layout)
         return container
 
-    def render(self):
+    def _render(self):
         navbar = self._navbar()
         container = self._fluid()
         self.append(navbar)
