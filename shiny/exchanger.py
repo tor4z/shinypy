@@ -3,19 +3,14 @@ from .wstream import string_to_json, json_to_string
 
 class Mapping:
     def __init__(self):
-        self._inited = False
         self._in_map = {}
         self._out_map = {}
 
-    def inited(self):
-        if not self._inited:
-            self._inited = True
-
     def bind(self, in_port, out_port):
         # Double end binding
-        if not self._inited:
-            self._bind(self._in_map, in_port, out_port)
-            self._bind(self._out_map, out_port, in_port)
+        # TODO Fix multi-binding
+        self._bind(self._in_map, in_port, out_port)
+        self._bind(self._out_map, out_port, in_port)
 
     def _bind(self, map, key1, key2):
         if key1 in map:
@@ -24,10 +19,10 @@ class Mapping:
             map[key1] = {key2}
 
     def get_outs(self, in_port):
-        return self._in_map[in_port]
+        return self._in_map.get(in_port, set())
 
     def get_ins(self, out_port):
-        return self._out_map[out_port]
+        return self._out_map.get(out_port, set())
 
 
 class In:
