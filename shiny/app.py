@@ -19,6 +19,14 @@ class App:
         await out.execute()
         return out.msg
 
+    async def _init_connction(self, ws):
+        msg, _ = await ws.receive_msg()
+        out = Out(In(msg, self.mapping, ws))
+        self.server(out)
+        await out.init_execute()
+        await ws.send_msg(out.msg)
+        self.mapping.inited = True
+
     async def handler(self, request):
         resp = web.WebSocketResponse()
         available = resp.can_prepare(request)
@@ -28,6 +36,7 @@ class App:
 
         await resp.prepare(request)
         ws = WStream(resp)
+        await self._init_connction(ws)
         try:
             async for msg, _ in ws:
                 try:
