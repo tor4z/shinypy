@@ -56,15 +56,13 @@ class WStream:
 
     async def receive_msg(self, *args, **kwargs):
         string, type = await self.receive(*args, **kwargs)
-        if type is WSMsgType.TEXT:
-            msg = Message(string)
-            return msg, msg.MSG
+        msg = Message(string)
+        return msg, WSMsgType.MSG
 
     async def receive_data(self, *args, **kwargs):
         msg, type = await self.receive(*args, **kwargs)
-        if type is WSMsgType.TEXT:
-            data = string_to_json(msg.data)
-            return data, msg.DICT
+        data = string_to_json(msg.data)
+        return data, WSMsgType.DICT
 
     async def receive(self, *args, **kwargs):
         msg = await self._ws.receive(*args, **kwargs)
