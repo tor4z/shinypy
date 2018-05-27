@@ -93,13 +93,14 @@ class ModelManager {
 
     init_models() {
         for(let key in Model) {
-            let selector = Model[key];
-            models = this.getModels(key);
+            let modelName = Model[key];
+            let selector = '[' + modelName + ']';
+            let models = this.getModels(key);
 
             let allElements = document.querySelectorAll(selector);
             for(const element of allElements) {
-                let model = element.getAttribute(this.modelName);
-                let elements = this._models.get(model);
+                let model = element.getAttribute(modelName);
+                let elements = models.get(model);
                 if(elements === undefined) {
                     elements = [element];
                 } else {
@@ -116,9 +117,9 @@ class ModelManager {
         }
 
         let models = this.getModels(model);
-        data = {};
+        let data = {};
         for(let key of keys) {
-            data[key] = model.get(key);
+            data[key] = models.get(key);
         }
         return data;
     }
@@ -217,7 +218,7 @@ class ModelIn{
     }
 
     static getElementModel(element) {
-        return element.getAttribute(ModelIn.modelName);
+        return element.getAttribute(Model.IN);
     }
 
     static getElementData(element) {
@@ -238,7 +239,7 @@ class ModelIn{
 }
 
 
-class ModelOut extends ModelManager {
+class ModelOut {
     constructor(models) {
         this._models = models.out_models;
     }
@@ -328,20 +329,20 @@ class WStream extends WebSocket{
         this.isOpened = true;
         this.isClosed = false;
         this._sendBuffer();
-        log("Wstream opened.");
+        log("WStream opened.");
     }
 
     _onclose(evt) {
         this.isClosed = true;
         this.isOpened = false;
-        log("Wstream closed.");
+        log("WStream closed.");
     }
 
     _onmessage(evt) {
         let str = evt.data;
-        log("Wsrteam recv: " + str)
+        log("WSrteam recv: " + str)
         let msg = new Message(str);
-        thos.resolveMsg(msg);
+        this.resolveMsg(msg);
     }
 
     resolveMsg(msg) {
@@ -350,10 +351,10 @@ class WStream extends WebSocket{
         }
 
         if(msg.method === Method.SET) {
-            this._modelOut(msg.data);
+            this._modelOut.setData(msg.data);
         } else if(msg.method === Method.GET) {
             let data = this._models.query('IN', msg.keys);
-            result = new Message()
+            let result = new Message()
             result.data = data;
             this.sendMsg(result);
         }
@@ -526,7 +527,7 @@ class Message {
 
 
 window.onload = () => {
-    models = ModelManager()
+    let models = new ModelManager();
     let modelOut = new ModelOut(models);
     let wstream = new WStream(getWSURL(), modelOut, models);
     let modelIn = new ModelIn(models, wstream);
