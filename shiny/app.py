@@ -1,6 +1,7 @@
 from aiohttp import web
 from .const import assets
-from exchanger import In, Out, Mapping
+from .exchanger import In, Out, Mapping
+from .wstream import WStream, WStreamExp
 
 
 class App:
@@ -12,6 +13,12 @@ class App:
         self.app.add_routes([web.get('/', self.handler)])
         self.app.router.add_static(assets[0], assets[1])
 
+    async def resolve_msg(self, msg, ws):
+        out = Out(In(msg, self.mapping, ws))
+        self.server(out)
+        await out.execute()
+        return out.msg
+
     async def handler(self, request):
         resp = web.WebSocketResponse()
         available = resp.can_prepare(request)
@@ -20,18 +27,18 @@ class App:
             return web.Response(text=str(self.ui), headers=headers)
 
         await resp.prepare(request)
+        ws = WStream(resp)
         try:
-            async for msg in resp:
-                if msg.type == web.WSMsgType.TEXT:
-                    out = Out(In(msg.data, self.mapping))
-                    self.server(out)
-                    await resp.send_str(str(out))
-                else:
-                    return resp
-            return resp
+            async for msg, _ in ws:
+                try:
+                    result = await self.resolve_msg(msg, ws)
+                    await ws.send_msg(result)
+                except WStreamExp:
+                    return ws.raw
+            return ws.raw
         finally:
             # disconnected
-            await resp.close()
+            await ws.close()
 
     def start(self, port=None, host=None):
         web.run_app(self.app, port=port, host=host)
