@@ -309,7 +309,7 @@ class Buffer {
 }
 
 
-class Wstream extends WebSocket{
+class WStream extends WebSocket{
     constructor (wsurl, modelOut, models) {
         super(wsurl)
         log("Connect with websocket to: " + wsurl);
@@ -528,7 +528,7 @@ class Message {
 window.onload = () => {
     models = ModelManager()
     let modelOut = new ModelOut(models);
-    let wstream = new Wstream(getWSURL(), modelOut, models);
+    let wstream = new WStream(getWSURL(), modelOut, models);
     let modelIn = new ModelIn(models, wstream);
     modelIn.init();
 }
