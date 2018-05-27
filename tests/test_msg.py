@@ -1,6 +1,6 @@
 import json
 import random
-from shiny.wstream import MessageParser, Status
+from shiny.wstream import Message, Status, Method
 from shiny.util import randstr
 
 
@@ -15,7 +15,7 @@ def test_str_msg_parser():
     msg['status'] = Status.SUCCESS
     msg['reason'] = reason
     msg['data'] = data
-    m = MessageParser(msg)
+    m = Message(msg)
 
     assert m.data == data
     assert m.status == Status.SUCCESS
@@ -26,7 +26,7 @@ def test_str_msg_parser():
         assert m.value(key) == data.get(key)
 
     str_msg = json.dumps(msg)
-    m = MessageParser(str_msg)
+    m = Message(str_msg)
 
     assert m.data == data
     assert m.status == Status.SUCCESS
@@ -39,11 +39,12 @@ def test_str_msg_parser():
 
 def test_msg_get():
     key = randstr(5)
-    msg = MessageParser.get(key)
-    target = {'method': 'GET',
+    msg = Message()
+    msg.query(key)
+    target = {'method': Method.GET,
               'data': {'keys': [key]}}
 
-    assert msg == json.dumps(target)
+    assert msg.raw == target
 
 
 def test_msg_get_multi_keys():
@@ -51,8 +52,9 @@ def test_msg_get_multi_keys():
     for _ in range(random.randint(10, 20)):
         keys.append(randstr(5))
 
-    msg = MessageParser.get(*tuple(keys))
+    msg = Message()
+    msg.query(*tuple(keys))
     target = {'method': 'GET',
               'data': {'keys': keys}}
 
-    assert msg == json.dumps(target)
+    assert msg.raw == target
