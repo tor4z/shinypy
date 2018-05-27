@@ -15,10 +15,9 @@ dashboard.main.append(
 
 def server(OUT):
     @wg.Label.render
-    def do_a(IN):
-        return IN["a_in"]
-
-    OUT["a"] = do_a
+    async def do_a(IN):
+        return await IN["test"]
+    OUT["test"] = do_a
 
 
 if __name__ == "__main__":
