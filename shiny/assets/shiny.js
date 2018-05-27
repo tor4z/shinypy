@@ -1,12 +1,36 @@
 /*
-ModelIn --- Wstreaam --- ModelOut
-client       server      client
+                ModelManager
+(model-in, model-out, model-layout, model-button)
+                 /  |  \
+                /   |   \
+               /    |    \
+              /     |     \
+             /      |      \
+            /       |       \
+     ModelIn --- Wstreaam --- ModelOut
+    client       server      client
 */
 'use strict'; 
 
 
 const Status = {
-    
+    SUCCESS: 0,
+    ERROR: 1
+}
+
+
+const Method = {
+    GET: 'GET',
+    SET: 'SET',
+    EXEC: 'EXEC'
+}
+
+
+const Model = {
+    IN: 'model-in',
+    OUT: 'model-out',
+    LAYOUT: 'model-layout',
+    BUTTON: 'model-button'
 }
 
 
@@ -42,46 +66,78 @@ function getWSURL() {
     return ws_protocal + '://' + host;
 }
 
+
 class ModelManager {
     constructor() {
-        if(new.target == ModelManager){
-            throw new Error('Can not create model manager object directly.');
-        }
-        this._models = new Map();
-        this.init_tags();
+        this.in_models = new Map();
+        this.out_models = new Map();
+        this.layout_models = new Map();
+        this.button_models = new Map();
+        this.init_models();
     }
 
-    init_tags() {
-        let selector = '[' + this.modelName + ']'
-        let allElements = document.querySelectorAll(selector);
-        for(const element of allElements) {
-            let model = element.getAttribute(this.modelName);
-            let elements = this._models.get(model);
-            if(elements === undefined) {
-                elements = [element];
-            } else {
-                elements.push(element);
-            }
-            this._models.set(model, elements);
+    getModels(key) {
+        switch (key) {
+            case 'IN':
+                return this.in_models;
+            case 'OUT':
+                return this.out_models;
+            case 'LAYOUT':
+                return this.layout_models;
+            case 'BUTTON':
+                return this.button_models;
+            default:
+                throw new Error('Invalid model key.');
         }
+    }
+
+    init_models() {
+        for(let key in Model) {
+            let selector = Model[key];
+            models = this.getModels(key);
+
+            let allElements = document.querySelectorAll(selector);
+            for(const element of allElements) {
+                let model = element.getAttribute(this.modelName);
+                let elements = this._models.get(model);
+                if(elements === undefined) {
+                    elements = [element];
+                } else {
+                    elements.push(element);
+                }
+                models.set(model, elements);
+            }
+        }
+    }
+
+    query(model, keys) {
+        if(!Array.isArray(keys)) {
+            throw new Error("array required.");
+        }
+
+        let models = this.getModels(model);
+        data = {};
+        for(let key of keys) {
+            data[key] = model.get(key);
+        }
+        return data;
     }
 }
 
 
-
-class ModelIn extends ModelManager{
-    constructor(wstream) {
-        super();
+class ModelIn{
+    constructor(models, wstream) {
+        this._models = models.in_models;
         this._wstream = wstream;
     }
 
-    static get modelName() {return 'model-in';}
-    get modelName() {return ModelIn.modelName;}
-
     init() {
-        this.initEventListener();
         let allData = this.getAllData();
-        this._wstream.sendJson(allData);
+        let msg = new Message();
+        msg.method = Method.EXEC;
+        msg.data = allData;
+        this._wstream.sendMsg(msg);
+        this.initEventListener();
     }
 
     initEventListener() {
@@ -117,7 +173,10 @@ class ModelIn extends ModelManager{
     sendElementData(evt) {
         let element = evt.target;
         let data = ModelIn.getElementData(element);
-        this._wstream.sendJson(data);
+        let msg = new Message();
+        msg.data = data;
+        msg.method = Method.EXEC;
+        this._wstream.sendMsg(msg);
     }
 
     getValues(model) {
@@ -180,8 +239,8 @@ class ModelIn extends ModelManager{
 
 
 class ModelOut extends ModelManager {
-    constructor() {
-        super();
+    constructor(models) {
+        this._models = models.out_models;
     }
 
     static get modelName() {return 'model-out';}
@@ -251,17 +310,18 @@ class Buffer {
 
 
 class Wstream extends WebSocket{
-    constructor (wsurl=null, modelOut) {
+    constructor (wsurl, modelOut, models) {
         super(wsurl)
         log("Connect with websocket to: " + wsurl);
         this._modelOut = modelOut;
         this._buffer = new Buffer();
         this.isClosed = true;
         this.isOpened = false;
-        this.onopen = this._onopen
-        this.onclose = this._onclose
-        this.onmessage = this._onmessage
-        this.onerror = this._onerror
+        this.onopen = this._onopen;
+        this.onclose = this._onclose;
+        this.onmessage = this._onmessage;
+        this.onerror = this._onerror;
+        this._models = models;
     }
 
     _onopen(evt) {
@@ -280,8 +340,23 @@ class Wstream extends WebSocket{
     _onmessage(evt) {
         let str = evt.data;
         log("Wsrteam recv: " + str)
-        let data = string2Json(str);
-        this._modelOut.setData(data);
+        let msg = new Message(str);
+        thos.resolveMsg(msg);
+    }
+
+    resolveMsg(msg) {
+        if(!msg.success) {
+            log('Error' + msg.reason);
+        }
+
+        if(msg.method === Method.SET) {
+            this._modelOut(msg.data);
+        } else if(msg.method === Method.GET) {
+            let data = this._models.query('IN', msg.keys);
+            result = new Message()
+            result.data = data;
+            this.sendMsg(result);
+        }
     }
 
     _onerror(evt) {
@@ -295,6 +370,10 @@ class Wstream extends WebSocket{
 
     sendStr(str) {
         this._sendStr(str);
+    }
+
+    sendMsg(msg) {
+        this.sendStr(msg.stringify());
     }
 
     _sendBuffer() {
@@ -350,7 +429,7 @@ Set:
     responses msg:
     {
         status: status_code,
-        reason: 'Error message'
+        reason: 'Error message',
     }
 
 Execute:
@@ -365,14 +444,91 @@ Execute:
         data: {}
     }
 */
-class MessageParser {
+class Message {
+    constructor(msg=null) {
+        if(msg === null) {
+            this.msg = {};
+        } else if(typeof msg === 'string') {
+            this.msg = string2Json(msg);
+        } else if(typeof msg === 'object') {
+            this.msg = msg;
+        }
+    }
 
+    get status() {
+        return this.msg.status;
+    }
+
+    set status(status) {
+        this.msg.status = status;
+    }
+
+    get success() {
+        if(this.msg.status === Status.SUCCESS) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    get reason() {
+        return this.msg.reason;
+    }
+
+    set reason(reason) {
+        this.msg.reason = reason;
+    }
+
+    get method() {
+        return this.msg.method;
+    }
+
+    set method(method) {
+        this.msg.method = method;
+    }
+
+    get data() {
+        return this.msg.data;
+    }
+
+    set data(data) {
+        this.msg.data = data;
+    }
+
+    get keys() {
+        // Work only method is GET
+        return this.msg.data.keys;
+    }
+
+    add(key, value) {
+        if(this.msg.data === undefined) {
+            this.msg.data = {};
+        }
+
+        this.msg.data[key] = value;
+    }
+
+    _msgChecker() {
+        if(this.msg.status === undefined) {
+            this.msg.status = Status.SUCCESS;
+        }
+
+        if(this.msg.reason === undefined) {
+            this.msg.reason = '';
+        }
+    }
+
+    stringify() {
+        this._msgChecker();
+        return json2String(this.msg);
+    }
 }
 
 
 window.onload = () => {
-    let modelOut = new ModelOut();
-    let wstream = new Wstream(getWSURL(), modelOut);
-    let modelIn = new ModelIn(wstream);
+    models = ModelManager()
+    let modelOut = new ModelOut(models);
+    let wstream = new Wstream(getWSURL(), modelOut, models);
+    let modelIn = new ModelIn(models, wstream);
     modelIn.init();
 }
