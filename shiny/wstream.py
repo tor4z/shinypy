@@ -2,6 +2,42 @@ import json
 from enum import IntEnum
 
 
+class MsgType(IntEnum):
+    # websocket spec types
+    CONTINUATION = 0x0
+    TEXT = 0x1
+    BINARY = 0x2
+    PING = 0x9
+    PONG = 0xa
+    CLOSE = 0x8
+
+    # aiohttp specific types
+    CLOSING = 0x100
+    CLOSED = 0x101
+    ERROR = 0x102
+
+    # shiny specific types
+    DICT = 0x103
+
+    text = TEXT
+    binary = BINARY
+    ping = PING
+    pong = PONG
+    close = CLOSE
+    closing = CLOSING
+    closed = CLOSED
+    error = ERROR
+    dict = DICT
+
+
+class Status(IntEnum):
+    SUCCESS = 0x0
+    ERROR = 0x1
+
+    success = SUCCESS
+    error = ERROR
+
+
 def json_to_string(data):
     return json.dumps(data)
 
@@ -63,34 +99,6 @@ class Wstream:
         return self._ws
 
 
-class MsgType(IntEnum):
-    # websocket spec types
-    CONTINUATION = 0x0
-    TEXT = 0x1
-    BINARY = 0x2
-    PING = 0x9
-    PONG = 0xa
-    CLOSE = 0x8
-
-    # aiohttp specific types
-    CLOSING = 0x100
-    CLOSED = 0x101
-    ERROR = 0x102
-
-    # shiny specific types
-    DICT = 0x103
-
-    text = TEXT
-    binary = BINARY
-    ping = PING
-    pong = PONG
-    close = CLOSE
-    closing = CLOSING
-    closed = CLOSED
-    error = ERROR
-    dict = DICT
-
-
 class MessageParser:
     '''
     All message should be a json string.
@@ -120,7 +128,7 @@ class MessageParser:
         responses msg:
         {
             status: status_code,
-            reason: 'Error message'
+            reason: 'Error message',
         }
 
     Execute:
@@ -135,10 +143,14 @@ class MessageParser:
             data: {}
         }
     '''
+    GET = 'GET'
+    SET = 'SET'
+    EXEC = 'EXEC'
+
     @classmethod
     def get(cls, *keys):
         msg = {}
-        msg['method'] = 'GET'
+        msg['method'] = cls.GET
         msg['data'] = {'keys': list(keys)}
         return json_to_string(msg)
 
@@ -148,22 +160,30 @@ class MessageParser:
         self.msg = msg
 
     @property
-    def status_code(self):
-        pass
+    def status(self):
+        return self.msg.get("status")
 
     @property
     def reason(self):
-        pass
+        return self.msg.get("reason")
+
+    @property
+    def method(self):
+        return self.msg.get("method")
+
+    @property
+    def keys(self):
+        if self.method == self.GET:
+            return self.data.get("keys")
+        else:
+            return self.data.keys()
 
     @property
     def data(self):
-        pass
+        return self.msg.get("data")
 
-    def value(self, key=None):
-        if key is None:
-            pass
-        else:
-            pass
+    def value(self, key):
+        return self.data.get(key)
 
 
 class WstreamExp(Exception):
