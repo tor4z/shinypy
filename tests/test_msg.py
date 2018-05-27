@@ -1,6 +1,6 @@
 import json
 import random
-from shiny.wstream import Message, Status, Method
+from shiny.message import Message, Status, Method
 from shiny.util import randstr
 
 
@@ -53,7 +53,7 @@ def test_msg_get_multi_keys():
         keys.append(randstr(5))
 
     msg = Message()
-    msg.query(*tuple(keys))
+    msg.query(keys)
     target = {'method': 'GET',
               'data': {'keys': keys}}
 
