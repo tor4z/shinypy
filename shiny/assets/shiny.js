@@ -244,9 +244,6 @@ class ModelOut {
         this._models = models.out_models;
     }
 
-    static get modelName() {return 'model-out';}
-    get modelName() {return ModelOut.modelName;}
-
     setValue(model, value) {
         var elements = this._models.get(model);
         if(elements === undefined) {
