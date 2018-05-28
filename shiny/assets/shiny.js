@@ -155,16 +155,9 @@ class ModelIn{
         for(const key of this._models.keys()) {
             let elements = this._models.get(key);
             for(const element of elements) {
-                let oldData = data[key];
-                let value = this.getElementValue(element);
-                if(oldData === undefined) {
+                if(!(key in data)) {
+                    let value = this.getElementValue(element);
                     data[key] = value;
-                } else {
-                    if(Array.isArray(oldData)) {
-                        data[key].push(value);
-                    } else {
-                        data[key] = [oldData, value];
-                    }
                 }
             }
         }
@@ -202,7 +195,7 @@ class ModelIn{
                 let elements = this.getElements(model);
                 var value = [];
                 for(const element of elements) {
-                    if(element.getAttribute('checked')) {
+                    if(element.checked) {
                         value.push(element.getAttribute('value'));
                     }
                 }
