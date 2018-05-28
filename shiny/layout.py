@@ -37,7 +37,7 @@ class DashboardLayout(Layout):
 
     def _sidebar(self):
         nav = Element("nav")
-        nav.set("class", "col-md-2 d-none d-md-block bg-light sidebar")
+        nav.set("class", "col-md-4 d-none d-md-block col-lg-3 bg-light sidebar")
         sidebar_sticky = Element("div")
         sidebar_sticky.set("class", "sidebar-sticky")
         sidebar_sticky.append(self.sidebar)
@@ -47,7 +47,7 @@ class DashboardLayout(Layout):
     def _main(self):
         main = Element("main")
         main.set("role", "main")
-        main.set("class", "col-md-9 ml-sm-auto col-lg-10 px-4 main")
+        main.set("class", "col-md-8 ml-sm-auto col-lg-9 px-4 main")
         main.append(self.main)
         return main
 
