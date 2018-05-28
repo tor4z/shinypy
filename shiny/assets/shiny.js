@@ -260,7 +260,7 @@ class ModelOut {
                     if(value.include(val)) {
                         element.setAttribute('checked', true);
                     } else {
-                        element.setAttribute('checked', false);
+                        element.removeAttribute('checked');
                     }
                 } else {
                     // value should be a single value.
