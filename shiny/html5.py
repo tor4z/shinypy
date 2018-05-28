@@ -29,11 +29,12 @@ class Element:
     def element(self):
         return self._element
 
-    def append(self, ele):
-        if not isinstance(ele, Element):
-            raise TypeError("Element reqquired.")
-        ele._render()
-        self._element.append(ele.element)
+    def append(self, *elements):
+        for element in elements:
+            if not isinstance(element, Element):
+                raise TypeError("Element reqquired.")
+            element._render()
+            self._element.append(element.element)
 
     @property
     def text(self):
