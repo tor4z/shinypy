@@ -138,6 +138,7 @@ class Input(Widget):
     def __init__(self, model, value=None, *, id=None, label=None, **kwargs):
         if label is None:
             self._input_tag = None
+            self._label_tag = None
             super().__init__(model, None, id=id, **kwargs)
         else:
             id = id or randstr(10)   # id must be not None
