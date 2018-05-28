@@ -10,8 +10,10 @@ ui.layout = dashboard
 dashboard.sidebar.append(
     wg.Text("test", "test", label="Test"),
     wg.Password('passwd', label="Password"),
-    wg.Checkbox('checkbox', [('option1', 'Option1', True),
-                             ('option2', 'Option2')]))
+    wg.Checkbox('checkbox', 'option1', 'Option1', False),
+    wg.Checkbox('checkbox', 'option2', 'Option2', False),
+    wg.Checkbox('checkbox', 'option3', 'Option3', False),
+    wg.Checkbox('checkbox', 'option4', 'Option4', True))
 dashboard.main.append(
     wg.Label("test"))
 

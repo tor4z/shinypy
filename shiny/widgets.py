@@ -32,7 +32,7 @@ class Widget(Element):
     _TAG = "div"
     _BASE_CLASS = ""
     _MODEL = None
-    _DEFAULT_ID_LEN = 5
+    _DEFAULT_ID_LEN = 10
 
     def __init__(self, model, value=None, *, id=None, tag=None, **kwargs):
         super().__init__(tag or self._TAG)
@@ -42,7 +42,7 @@ class Widget(Element):
         self.set("id", self.id)
         self.value = value
         self.add_class(self._BASE_CLASS)
-        self.set_model(model or self.id or randstr(5))
+        self.set_model(model or self.id or randstr(10))
 
     def set_model(self, model):
         if self._MODEL is None:
@@ -140,21 +140,21 @@ class Input(Widget):
             self._input_tag = None
             super().__init__(model, None, id=id, **kwargs)
         else:
-            id = id or randstr(5)   # id must be not None
+            id = id or randstr(10)   # id must be not None
             self._input_tag = Element(self._TAG)
             super().__init__(model, None, id=id, tag="div", **kwargs)
             super().set("class", "form-group")
-            self._add_label(id, label)
+            self._label_tag = self._new_label(id, label)
 
         self.set("type", self._TYPE)
         self.set("class", "form-control")
         self.set("value", self.value)
 
-    def _add_label(self, id, text):
+    def _new_label(self, id, text):
         label_tag = Element("label")
         label_tag.set("for", id)
-        label_tag.text = text + ':'
-        self.append(label_tag)
+        label_tag.text = text
+        return label_tag
 
     def set(self, key, value):
         if self._input_tag:
@@ -163,6 +163,8 @@ class Input(Widget):
             super().set(key, value)
 
     def _render(self):
+        if self._label_tag:
+            self.append(self._label_tag)
         if self._input_tag:
             self.append(self._input_tag)
 
@@ -251,7 +253,7 @@ class Radio(Widget):
 
     def new_item(self, radio):
         rd, dis = radio
-        id = randstr(5)
+        id = randstr(10)
         div = Element('div')
         div.set('class', 'form-check')
 
@@ -274,6 +276,10 @@ class Radio(Widget):
 
 class Checkbox(Radio):
     _TYPE = "checkbox"
+
+    def __init__(self, model, value, label, checked=False, **kwargs):
+        option = [(value, label, checked)]
+        super().__init__(model, option, **kwargs)
 
 
 class Range(Input):
