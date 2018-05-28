@@ -122,8 +122,9 @@ class Panel(Widget):
         self._body = Element("div")
         self._body.set("class", "panel-body")
 
-    def append(self, ele):
-        self._body.append(ele)
+    def append(self, *elements):
+        for element in elements:
+            self._body.append(element)
 
     def _render(self):
         super().append(self._body)
@@ -134,7 +135,7 @@ class Input(Widget):
     _TYPE = "text"
     _MODEL = Model.In
 
-    def __init__(self, model, value, *, id=None, label=None, **kwargs):
+    def __init__(self, model, value=None, *, id=None, label=None, **kwargs):
         if label is None:
             self._input_tag = None
             super().__init__(model, None, id=id, **kwargs)
@@ -142,19 +143,18 @@ class Input(Widget):
             id = id or randstr(5)   # id must be not None
             self._input_tag = Element(self._TAG)
             super().__init__(model, None, id=id, tag="div", **kwargs)
-            self.set("class", "form-group")
-            label_tag = self._new_label(id, label)
-            self.append(label_tag)
+            super().set("class", "form-group")
+            self._add_label(id, label)
 
         self.set("type", self._TYPE)
         self.set("class", "form-control")
         self.set("value", self.value)
 
-    def _new_label(self, id, text):
+    def _add_label(self, id, text):
         label_tag = Element("label")
         label_tag.set("for", id)
-        label_tag.text = text
-        return label_tag
+        label_tag.text = text + ':'
+        self.append(label_tag)
 
     def set(self, key, value):
         if self._input_tag:
@@ -216,21 +216,31 @@ class Radio(Widget):
     _TYPE = "radio"
     _MODEL = Model.In
 
-    def __init__(self, model, options, id=None, **kwargs):
+    def __init__(self, model, options, **kwargs):
         if not isinstance(options, list):
             raise TypeError("List required.")
         self.radios = []
         for option in options:
-            value, display = option
+            if isinstance(option, str):
+                value = option
+                display = option
+                checked = False
+            else:
+                opt_len = len(option)
+                if opt_len == 3:
+                    value, display, checked = option
+                elif opt_len == 2:
+                    value, display = option
+                    checked = False
+                else:
+                    raise TypeError
+
             radio = Element("input")
             radio.set("type", self._TYPE)
             radio.set("value", value)
-            radio_id = id + str(value)
-            radio.set("id", radio_id)
-            label = Element("label")
-            label.set("for", radio_id)
-            label.text = display
-            self.radios.append((radio, label))
+            if checked:
+                radio.set("checked", 'true')
+            self.radios.append((radio, display))
 
         super().__init__(model, None, **kwargs)
 
@@ -239,12 +249,27 @@ class Radio(Widget):
             rd, _ = radio
             rd.set(key, value)
 
+    def new_item(self, radio):
+        rd, dis = radio
+        id = randstr(5)
+        div = Element('div')
+        div.set('class', 'form-check')
+
+        rd.set('id', id)
+        rd.set('class', 'form-check-input')
+
+        label = Element('label')
+        label.set('class', 'form-check-label')
+        label.set('for', id)
+        label.text = dis
+
+        div.append(rd, label)
+        return div
+
     def _render(self):
         for radio in self.radios:
-            rd, lb = radio
-            self.append(rd)
-            self.append(lb)
-            self.append(Element("br"))
+            item = self.new_item(radio)
+            self.append(item)
 
 
 class Checkbox(Radio):
