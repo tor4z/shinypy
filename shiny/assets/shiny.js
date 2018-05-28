@@ -200,7 +200,7 @@ class ModelIn{
             if(input_type === 'radio' || input_type == 'checkbox') {
                 let model = this.getElementModel(element);
                 let elements = this.getElements(model);
-                let value = [];
+                var value = [];
                 for(const element of elements) {
                     if(element.getAttribute('checked')) {
                         value.push(element.getAttribute('value'));
