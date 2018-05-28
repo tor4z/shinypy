@@ -9,11 +9,22 @@ dashboard = DashboardLayout("Test")
 ui.layout = dashboard
 dashboard.sidebar.append(
     wg.Text("test", "test", label="Test"),
-    wg.Password('passwd', label="Password"),
+    wg.Password('passwd', "Password"),
     wg.Checkbox('checkbox', 'option1', 'Option1', False),
     wg.Checkbox('checkbox', 'option2', 'Option2', False),
     wg.Checkbox('checkbox', 'option3', 'Option3', False),
-    wg.Checkbox('checkbox', 'option4', 'Option4', True))
+    wg.Checkbox('checkbox1', 'option4', 'Option4', True),
+    wg.Radio("radio", [('radio1', 'Radio1', True),
+                       ('radio2', 'Radio3'),
+                       ('radio4', 'Radio4')], "RADIO"),
+    wg.File('file', 'File'),
+    wg.Range('range', 10, 'Range', min=0, max=100),
+    wg.Number('number', 10, 'Number'),
+    wg.Time('time', 'Now'),
+    wg.Date('date', 'Date'),
+    wg.Url('url', 'https://www.google.com', "Address"),
+    wg.Email('email', 'xx@xxx.com', 'Email'),
+    wg.Textarea('testarea', "some text", "Textarea"))
 dashboard.main.append(
     wg.Label("test"))
 
