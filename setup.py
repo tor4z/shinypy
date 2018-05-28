@@ -26,7 +26,7 @@ AUTHOR_EMAIL = "vwenjie@hotmail.com"
 URL = "https://github.com/tor4z/shinypy"
 LICENSE = "MIT License"
 VERSION = 0.1
-TESTS_REQUIRE = ["pytest"]
+TESTS_REQUIRE = ["pytest", "beautifulsoup4"]
 CMDCLASS = {"test": PyTest}
 
 
