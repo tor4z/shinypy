@@ -23,7 +23,7 @@ class App:
         msg, _ = await ws.receive_msg()
         out = Out(In(msg, self.mapping, ws))
         self.server(out)
-        await out.init_execute()
+        out.init_execute()
         await ws.send_msg(out.msg)
         self.mapping.inited = True
 

@@ -36,11 +36,11 @@ class In:
     def __setitem__(self, key, value):
         raise NotImplementedError
 
-    async def __getitem__(self, in_port):
+    def __getitem__(self, in_port):
         self.mapping.bind(in_port, self._out_port)
-        if in_port not in self._data:
-            data = await self._ws.query(in_port)
-            self._data.update(data)
+        # if in_port not in self._data:
+        #    data = await self._ws.query(in_port)
+        #    self._data.update(data)
         return self._data[in_port]
 
     async def cache(self, in_ports):
@@ -75,8 +75,8 @@ class Out:
     def __getitem__(self, key):
         raise NotImplementedError
 
-    async def init_execute(self):
-        await self._execute(self._outs.keys())
+    def init_execute(self):
+        self._execute(self._outs.keys())
 
     async def execute(self):
         out_ports = set()
@@ -89,13 +89,13 @@ class Out:
             in_ports.update(self.mapping.get_ins(out_port))
 
         await self._in.cache(in_ports)
-        await self._execute(out_ports)
+        self._execute(out_ports)
 
-    async def _execute(self, outs):
+    def _execute(self, outs):
         for out_port in outs:
             func = self._outs[out_port]
             iner = self._in.instance(out_port)
-            self._data[out_port] = await func(iner)
+            self._data[out_port] = func(iner)
 
     @property
     def msg(self):

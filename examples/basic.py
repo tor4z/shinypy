@@ -15,8 +15,8 @@ dashboard.main.append(
 
 def server(OUT):
     @wg.Label.render
-    async def do_a(IN):
-        return await IN["test"]
+    def do_a(IN):
+        return IN["test"]
     OUT["test"] = do_a
 
 
