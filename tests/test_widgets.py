@@ -284,17 +284,20 @@ def test_radio():
 
 
 def test_checkbox():
-    id = randstr(5)
     model = randstr(5)
     options = []
-    for i in range(10):
+    cnt = 10
+
+    for i in range(cnt):
         val = randstr(i * 2)
         options.append((val, val.upper()))
 
     checkbox = wg.Checkbox(model, options)
     soup = new_soup(checkbox)
 
-    for input_tag in soup.find_all("input"):
+    input_tags = soup.find_all("input")
+    assert input_tags is not None and len(input_tags) == cnt
+    for input_tag in input_tags:
         value = input_tag["value"]
         assert input_tag.name == "input"
         assert input_tag[Model.In] == model
@@ -302,7 +305,6 @@ def test_checkbox():
 
         label = input_tag.find_next_sibling("label")
         assert label is not None
-        label["for"] == id + str(value)
         label.text == value.upper()
 
 
