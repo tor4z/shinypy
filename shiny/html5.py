@@ -32,7 +32,7 @@ class Element:
     def append(self, *elements):
         for element in elements:
             if not isinstance(element, Element):
-                raise TypeError("Element reqquired.")
+                raise TypeError("Element required.")
             element._render()
             self._element.append(element.element)
 
