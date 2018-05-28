@@ -135,15 +135,15 @@ class Input(Widget):
     _TYPE = "text"
     _MODEL = Model.In
 
-    def __init__(self, model, value=None, *, id=None, label=None, **kwargs):
+    def __init__(self, model, value, label, *, id=None, **kwargs):
         if label is None:
             self._input_tag = None
             self._label_tag = None
-            super().__init__(model, None, id=id, **kwargs)
+            super().__init__(model, value, id=id, **kwargs)
         else:
             id = id or randstr(10)   # id must be not None
             self._input_tag = Element(self._TAG)
-            super().__init__(model, None, id=id, tag="div", **kwargs)
+            super().__init__(model, value, id=id, tag="div", **kwargs)
             super().set("class", "form-group")
             self._label_tag = self._new_label(id, label)
 
@@ -173,16 +173,19 @@ class Input(Widget):
 class Date(Input):
     _TYPE = "date"
 
-    def __init__(self, model, value=None, **kwargs):
+    def __init__(self, model, label, value=None, **kwargs):
         if value is not None and not isinstance(value, datetime.date):
             raise TypeError("datetime.date required.")
         date = value or datetime.date.today()
         date_str = date.strftime("%Y-%m-%d")
-        super().__init__(model, date_str, **kwargs)
+        super().__init__(model, date_str, label, **kwargs)
 
 
 class File(Input):
     _TYPE = "file"
+
+    def __init__(self, model, label, **kwargs):
+        super().__init__(model, None, label, **kwargs)
 
 
 class Email(Input):
@@ -193,8 +196,8 @@ class Email(Input):
 class Number(Input):
     _TYPE = "number"
 
-    def __init__(self, model, value, id=None, *, min=None, max=None,
-                 step=1, label=None, **kwargs):
+    def __init__(self, model, value, label, *, id=None, min=None, max=None,
+                 step=1, **kwargs):
         super().__init__(model, value, id=id, label=label, **kwargs)
         if min is not None and max is not None and max < min:
             raise ValueError("max should be greater than min.")
@@ -213,16 +216,20 @@ class Number(Input):
 class Password(Input):
     _TYPE = "password"
 
+    def __init__(self, model, label, **kwargs):
+        super().__init__(model, None, label, **kwargs)
+
 
 class Radio(Widget):
     _TAG = "div"
     _TYPE = "radio"
     _MODEL = Model.In
 
-    def __init__(self, model, options, **kwargs):
+    def __init__(self, model, options, label, **kwargs):
         if not isinstance(options, list):
             raise TypeError("List required.")
         self.radios = []
+        self._model = model
         for option in options:
             if isinstance(option, str):
                 value = option
@@ -245,6 +252,8 @@ class Radio(Widget):
                 radio.set("checked", 'true')
             self.radios.append((radio, display))
 
+        self._label_tag = Element('label')
+        self._label_tag.text = label
         super().__init__(model, None, **kwargs)
 
     def set(self, key, value):
@@ -259,6 +268,7 @@ class Radio(Widget):
         div.set('class', 'form-check')
 
         rd.set('id', id)
+        rd.set('name', self._model)
         rd.set('class', 'form-check-input')
 
         label = Element('label')
@@ -270,26 +280,48 @@ class Radio(Widget):
         return div
 
     def _render(self):
+        self.append(self._label_tag)
         for radio in self.radios:
             item = self.new_item(radio)
             self.append(item)
 
 
-class Checkbox(Radio):
+class Checkbox(Widget):
+    _TAG = "div"
     _TYPE = "checkbox"
+    _MODEL = Model.In
 
     def __init__(self, model, value, label, checked=False, **kwargs):
-        option = [(value, label, checked)]
-        super().__init__(model, option, **kwargs)
+        id = randstr(10)
+        self._input_tag = Element('input')
+        self._label_tag = Element('label')
 
+        self._label_tag.text = label
+        self._label_tag.set('for', id)
+        self._label_tag.set('class', 'form-check-label')
+
+        self.set('id', id)
+        self.set('class', 'form-check-input')
+        self.set('value', value)
+        self.set('type', self._TYPE)
+
+        super().__init__(model, **kwargs)
+        super().set('class', 'form-check')
+
+    def set(self, key, value):
+        self._input_tag.set(key, value)
+
+    def _render(self):
+        self.append(self._input_tag)
+        self.append(self._label_tag)
 
 class Range(Input):
     _TYPE = "range"
     _MIN = 0
     _MAX = 100
 
-    def __init__(self, model, value, id=None, *, min=None, max=None,
-                 label=None, **kwargs):
+    def __init__(self, model, value, label, *,id=None, min=None, max=None,
+                 **kwargs):
         super().__init__(model, value, id=id, label=label, **kwargs)
         min = min or self._MIN
         max = max or self._MAX
@@ -330,14 +362,14 @@ class Text(Input):
 class Time(Input):
     _TYPE = "time"
 
-    def __init__(self, model, value=None, **kwargs):
+    def __init__(self, model, label, value=None, **kwargs):
         if value is None:
             value = datetime.datetime.now()
         if value is not None and isinstance(value, datetime.datetime):
             value = value.strftime("%H:%M")
         else:
             raise TypeError("datetime required.")
-        super().__init__(model, value, **kwargs)
+        super().__init__(model, value, label, **kwargs)
 
 
 class Url(Input):
@@ -348,22 +380,26 @@ class Textarea(Widget):
     _TAG = "textarea"
     _MODEL = Model.In
 
-    def __init__(self, model, value, *, id=None, rows=5, cols=5,
-                 label=None, **kwargs):
+    def __init__(self, model, value, label, *, id=None, rows=5, cols=5,
+                 **kwargs):
         if label is None:
             self._textarea = None
             super().__init__(model, value, id=id, **kwargs)
         else:
+            id = id or randstr(10)
             self._textarea = Element(self._TAG)
             super().__init__(model, value, id=id, tag="div", **kwargs)
-            label = Element("label")
-            label.set("for", id)
+            label_tag = Element("label")
+            label_tag.set("for", id)
+            label_tag.text = label
             br = Element("br")
-            self.append(label)
+            self.append(label_tag)
             self.append(br)
 
+        super().set('class', 'form-group')
         self.set("rows", rows)
         self.set("cols", cols)
+        self.set('class', 'form-control')
 
     def set(self, key, value):
         if self._textarea is None:
@@ -432,6 +468,10 @@ class Image(Widget):
             img = func(*args, **kwargs)
             return cls.base64_src(None, img)
         return _exec
+
+
+class Select(Widget):
+    pass
 
 
 class WidgetExp(Exception):
