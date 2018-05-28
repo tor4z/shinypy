@@ -156,7 +156,7 @@ class ModelIn{
             let elements = this._models.get(key);
             for(const element of elements) {
                 let oldData = data[key];
-                let value = ModelIn.getElementValue(element);
+                let value = this.getElementValue(element);
                 if(oldData === undefined) {
                     data[key] = value;
                 } else {
@@ -173,7 +173,7 @@ class ModelIn{
 
     sendElementData(evt) {
         let element = evt.target;
-        let data = ModelIn.getElementData(element);
+        let data = this.getElementData(element);
         let msg = new Message();
         msg.data = data;
         msg.method = Method.EXEC;
@@ -194,11 +194,11 @@ class ModelIn{
         return this._models.get(model);
     }
 
-    static getElementValue(element) {
+    getElementValue(element) {
         if(element.tagName === 'INPUT') {
             let input_type = element.getAttribute('type');
             if(input_type === 'radio' || input_type == 'checkbox') {
-                let model = ModelIn.getElementModel(element);
+                let model = this.getElementModel(element);
                 let elements = this.getElements(model);
                 let value = [];
                 for(const element of elements) {
@@ -217,14 +217,14 @@ class ModelIn{
         return value;
     }
 
-    static getElementModel(element) {
+    getElementModel(element) {
         return element.getAttribute(Model.IN);
     }
 
-    static getElementData(element) {
+    getElementData(element) {
         let data = {}
-        let model = ModelIn.getElementModel(element)
-        let value = ModelIn.getElementValue(element);
+        let model = this.getElementModel(element)
+        let value = this.getElementValue(element);
         data[model] = value;
         return data;
     }
