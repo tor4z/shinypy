@@ -6,11 +6,16 @@ class Element:
     _SIMPLE_TAG = ["link", "br", "input"]
     __slots__ = ["_element", "_declarar"]
 
-    def __init__(self, tag, declarar=False):
+    def __init__(self, tag=None, *, html=None, declarar=False):
         self._declarar = declarar
-        self._element = etree.Element(tag)
-        if tag not in self._SIMPLE_TAG:
-            self._element.text = ""
+        if tag is not None:
+            self._element = etree.Element(tag)
+            if tag not in self._SIMPLE_TAG:
+                self._element.text = ""
+        elif html is not None:
+            self._element = etree.XML(html)
+        else:
+            ValueError("tag or html least of one should be provide")
 
     def set(self, key, value):
         if not (key is None or value is None):
