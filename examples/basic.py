@@ -24,7 +24,13 @@ dashboard.sidebar.append(
     wg.Date('date', 'Date'),
     wg.Url('url', 'https://www.google.com', "Address"),
     wg.Email('email', 'xx@xxx.com', 'Email'),
-    wg.Textarea('testarea', "some text", "Textarea"))
+    wg.Select('select', [('option1', 'Option1', True),
+                         ('option2', 'Option2'),
+                         ('option3', 'Option3'),
+                         ('option3', 'Option3')], 'Option'),
+    wg.Textarea('testarea', "some text", "Textarea"),
+    wg.Form('form'))
+
 dashboard.main.append(
     wg.Label("test"))
 
