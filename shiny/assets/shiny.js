@@ -39,6 +39,16 @@ function log(msg) {
 }
 
 
+function error(msg) {
+    console.error('Shiny error: ' + msg);
+}
+
+
+function warn(msg) {
+    console.warn('Shiny warn: ' + msg);
+}
+
+
 function string2Array(str, sep=',') {
     return str.split(sep);
 }
@@ -194,17 +204,17 @@ class ModelIn{
                 let model = this.getElementModel(element);
                 let elements = this.getElements(model);
                 if(input_type === 'radio') {
-                    var value = ''
+                    var value = '';
                     for(const element of elements) {
                         if(element.checked) {
-                            value = element.getAttribute('value');
+                            value = element.value;
                         }
                     }
                 } else {
                     var value = [];
                     for(const element of elements) {
                         if(element.checked) {
-                            value.push(element.getAttribute('value'));
+                            value.push(element.value);
                         }
                     }
                 }
@@ -213,6 +223,14 @@ class ModelIn{
             }
         } else if (element.tagName === 'IMG'){
             var value = element.getAttribute('src');
+        } else if(element.tagName === 'SELECT') {
+            var value = '';
+            let elements = element.children;
+            for(let element of elements) {
+                if(element.selected) {
+                    value = element.value;
+                }
+            }
         } else {
             var value = element.textContent;
         }
@@ -346,7 +364,7 @@ class WStream extends WebSocket{
 
     resolveMsg(msg) {
         if(!msg.success) {
-            log('Error' + msg.reason);
+            error('Error' + msg.reason);
         }
 
         if(msg.method === Method.SET) {
@@ -521,6 +539,21 @@ class Message {
     stringify() {
         this._msgChecker();
         return json2String(this.msg);
+    }
+}
+
+
+class Alert {
+    static success(msg) {
+
+    }
+
+    static error(msg) {
+
+    }
+
+    static warn(msg) {
+        
     }
 }
 
