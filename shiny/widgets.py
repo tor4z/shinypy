@@ -339,6 +339,7 @@ class Submit(Widget):
     _TAG = "input"
     _TYPE = "submit"
     _VALUE = "Submit"
+    _BASE_CLASS = "btn btn-primary"
     _MODEL = Model.Button
 
     def __init__(self, model, value=None):
@@ -416,6 +417,9 @@ class Form(Widget):
     _TAG = "form"
     _MODEL = Model.Layout
 
+    def __init__(self, model):
+        super().__init__(model)
+
     def _render(self):
         submit = Submit(self.model)
         reset = Reset(self.model)
@@ -471,7 +475,45 @@ class Image(Widget):
 
 
 class Select(Widget):
-    pass
+    _TAG = "div"
+    _MODEL = Model.In
+
+    def __init__(self, model, optinos, label, **kwargs):
+        if not isinstance(optinos, list):
+            raise TypeError('List required.')
+
+        self._select_tag = Element('select')
+        for optino in optinos:
+            tag = self._new_item(optino)
+            self._select_tag.append(tag)
+
+        label_tag = Element('label')
+        label_tag.text = label
+        self._select_tag.set('class', 'custom-select')
+        super().__init__(model, None, **kwargs)
+        self.append(label_tag)
+
+    def _new_item(self, optino):
+        opt_len = len(optino)
+        if opt_len == 3:
+            value, display, selected = optino
+        elif opt_len == 2:
+            value, display = optino
+            selected = False
+        else:
+            raise ValueError
+
+        tag = Element('option')
+        tag.text = display
+        if selected:
+            tag.set('selected', 'true')
+        return tag
+
+    def set(self, key, value):
+        self._select_tag.set(key, value)
+
+    def _render(self):
+        self.append(self._select_tag)
 
 
 class WidgetExp(Exception):
